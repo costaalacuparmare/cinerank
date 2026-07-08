@@ -11,13 +11,18 @@
  */
 
 :root {
-  /* colors */
-  --background-color: white;
-  --light-color: #f8f8f8;
-  --dark-color: #505050;
-  --text-color: #131313;
-  --link-color: #3b63fb;
-  --link-hover-color: #1d3ecf;
+  /* colors — dark "theater" palette: near-black stage, burgundy curtain, gold trim */
+  --background-color: #121012;
+  --light-color: #221f21;
+  --dark-color: #b8b0b2;
+  --text-color: #f5f1e8;
+  --link-color: #c9455f;
+  --link-hover-color: #d97088;
+  --accent-gold: #c9972b;
+  --accent-gold-hover: #d4a72c;
+  --curtain-color: #7a1b2e;
+  --curtain-hover-color: #5c1422;
+  --curtain-text-color: #f5f1e8;
 
   /* fonts */
   --body-font-family: roboto, roboto-fallback, sans-serif;
@@ -38,6 +43,20 @@
 
   /* nav height */
   --nav-height: 64px;
+}
+
+/* light "matinee" palette — cream stage, same burgundy curtain/gold trim for continuity */
+:root[data-theme="light"] {
+  --background-color: #f5f1e8;
+  --light-color: #e8dfd0;
+  --dark-color: #6b6058;
+  --text-color: #221f21;
+  --link-color: #9c2f43;
+  --link-hover-color: #7a1b2e;
+  --accent-gold: #a97a1f;
+  --accent-gold-hover: #8f6819;
+  --curtain-color: #7a1b2e;
+  --curtain-hover-color: #5c1422;
 }
 
 /* fallback fonts */
@@ -81,7 +100,13 @@ body {
 }
 
 body.appear {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1 0 auto;
 }
 
 header {

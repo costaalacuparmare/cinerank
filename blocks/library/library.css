@@ -1,0 +1,74 @@
+main .library > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 28px;
+}
+
+main .library .library-tile {
+  display: flex;
+  flex-direction: column;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+main .library .library-tile-poster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  background-color: var(--light-color);
+  color: var(--dark-color);
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  text-align: center;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+main .library .library-tile-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+main .library .library-tile-title {
+  font-family: var(--heading-font-family);
+  font-size: var(--body-font-size-m);
+  margin: 0;
+}
+
+main .library .library-tile-mean {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: var(--accent-gold);
+  color: #121012;
+  font-family: var(--heading-font-family);
+  font-size: var(--body-font-size-xs);
+}
+
+main .library .library-tile-mean svg {
+  height: 12px;
+  width: 12px;
+}
+
+main .library .library-tile:hover .library-tile-title {
+  color: var(--accent-gold);
+}
+
+/* Desktop and up */
+@media (width >= 900px) {
+  main .library > ul {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 40px;
+  }
+}
