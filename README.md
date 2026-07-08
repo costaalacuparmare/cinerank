@@ -37,7 +37,7 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
 
 Cross-cutting, not tied to one feature, revisit opportunistically: real TMDB API integration
 (currently stubbed in `movie.js`'s `fetchTmdbData()`), accounts (deliberately out of scope —
-personal single-user tool).
+personal single-user tool), navbar sizing on mobile (feels small/cramped currently).
 
 **Local dev note:** the dev server needs `--html-mount /` alongside `--html-folder drafts` so
 draft content resolves at real paths (`/`, `/nav`, `/movies/...`) instead of under `/drafts/...` —
