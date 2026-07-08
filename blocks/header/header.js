@@ -4,6 +4,32 @@ import { loadFragment } from '../fragment/fragment.js';
 // media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
+// inline (not <img>-based) so the icon can pick up currentColor and react to theme changes
+const SUN_ICON = '<svg class="nav-theme-icon-sun" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5" stroke="none"/><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.4" y1="4.4" x2="6.1" y2="6.1"/><line x1="17.9" y1="17.9" x2="19.6" y2="19.6"/><line x1="4.4" y1="19.6" x2="6.1" y2="17.9"/><line x1="17.9" y1="6.1" x2="19.6" y2="4.4"/></svg>';
+const MOON_ICON = '<svg class="nav-theme-icon-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
+/**
+ * Builds the light/dark theme toggle button and wires up its click handler.
+ * @returns {Element} the toggle button
+ */
+function buildThemeToggle() {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'nav-theme-toggle';
+  button.setAttribute('aria-label', 'Switch to light theme');
+  button.innerHTML = SUN_ICON + MOON_ICON;
+
+  button.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('cinerank-theme', next);
+    button.setAttribute('aria-label', next === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+  });
+
+  return button;
+}
+
 function closeOnEscape(e) {
   if (e.code === 'Escape') {
     const nav = document.getElementById('nav');
@@ -149,7 +175,28 @@ export default async function decorate(block) {
         }
       });
     });
+
+    // highlight whichever nav item matches the current page; movie detail pages
+    // (/movies/*) count as being "in" Library even though its link is just "/"
+    const { pathname } = window.location;
+    navSections.querySelectorAll(':scope a[href]').forEach((link) => {
+      const linkPath = new URL(link.href).pathname;
+      const isCurrent = linkPath === pathname
+        || (linkPath === '/' && pathname.startsWith('/movies/'));
+      if (isCurrent) {
+        link.setAttribute('aria-current', 'page');
+      }
+    });
   }
+
+  // theme toggle lives in nav-tools, creating the section if authoring didn't provide one
+  let navTools = nav.querySelector('.nav-tools');
+  if (!navTools) {
+    navTools = document.createElement('div');
+    navTools.classList.add('nav-tools');
+    nav.append(navTools);
+  }
+  navTools.append(buildThemeToggle());
 
   // hamburger for mobile
   const hamburger = document.createElement('div');

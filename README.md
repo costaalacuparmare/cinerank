@@ -1,10 +1,9 @@
 # Cinerank
 
-A cinephile's movie library: rate films across four categories (Story, Filmography, Sound, Vibe),
+A cinephile's movie library: rate films across four categories (Plot, Filmography, Sound, Vibe),
 rank them head-to-head, and plan what to watch, when, and where.
 
-*Personal movie tracking/ranking app, doubling as the EDS test site for the Nightshift project's
-M1 milestone. Started as a Notepad habit; this formalizes and expands it.*
+*Personal movie tracking/ranking app, doubling as the EDS test site*
 
 ---
 
@@ -17,6 +16,35 @@ director, or custom ranked lists.
 
 ---
 
+## Roadmap / build order
+
+Not the same as the feature numbering above — that's organized by concept, this is organized by
+actual dependency order. Calendar (Feature 3) explicitly depends on Backlog (Feature 4) existing
+first ("pull candidates from the Backlog"), so it can't come before it despite the numbering.
+
+1. **Library** *(shipped v1)* — `movie` detail-page block (TMDB-reference row, 4-axis scores,
+   optional review, back-to-Library link), nav bar (Library/Versus/Backlog/Calendar, with an
+   active-page highlight), and a `library` poster-grid landing page, all correlated together and
+   themed with the theater dark/light toggle. The grid is currently **manually authored** (one row
+   per movie) rather than sourced from the EDS query-index — query-index can't be exercised
+   against local `drafts/` content since it only indexes pages actually published to the content
+   source. Swapping the grid to read `/query-index.json` is a fast follow once movie pages are for
+   real published/added beyond the initial 3.
+2. **Versus/Duel** — no dependency on Backlog/Calendar, just needs Library entries to compare.
+   Can be built any time after Library.
+3. **Backlog** — needed before Calendar can be meaningfully built.
+4. **Calendar** — depends on Backlog existing (pulls "want to watch" candidates from it).
+
+Cross-cutting, not tied to one feature, revisit opportunistically: real TMDB API integration
+(currently stubbed in `movie.js`'s `fetchTmdbData()`), accounts (deliberately out of scope —
+personal single-user tool).
+
+**Local dev note:** the dev server needs `--html-mount /` alongside `--html-folder drafts` so
+draft content resolves at real paths (`/`, `/nav`, `/movies/...`) instead of under `/drafts/...` —
+run `aem up --html-folder drafts --html-mount /`.
+
+---
+
 ## Feature 1 — Library (main feature)
 
 The core log of everything you've watched.
@@ -24,7 +52,7 @@ The core log of everything you've watched.
 **Per-movie data:**
 - Poster/art, director, main cast, year, short summary (sourced from TMDB — see Technical notes)
 - Personal review — free-text, private, not shaped like a public review
-- Your rating, on **4 categories**: Story, Filmography, Sound, Vibe
+- Your rating, on **4 categories**: Plot, Filmography, Sound, Vibe
   - Each scored 0-10, with an allowance up to **11** for a genuinely exceptional score in that
     category (confirm: is this a deliberate "these go to eleven" exception, used rarely?)
   - **Weights** — configurable per category, so your overall score reflects what actually matters
@@ -35,6 +63,10 @@ The core log of everything you've watched.
 - Genre/vibe tags for filtering (e.g. "cozy," "unsettling," "kinetic" — felt tags, not just genre)
 - **Rewatch history** — each watch logged separately with its own date + score, so you can see how
   your opinion of a movie changed over time instead of overwriting the old rating
+- **External ratings/notes** — surface how a movie did elsewhere (IMDb, Rotten Tomatoes,
+  Letterboxd, etc.) alongside your own 4-axis score on its detail page, purely for reference/
+  comparison, not folded into your own rating. Not scoped yet: which of these have a usable free
+  API (Letterboxd notably doesn't), vs. what would need scraping.
 
 **Library view:** sortable/filterable by any of the above (score, category, director, year, tag,
 platform, etc.)

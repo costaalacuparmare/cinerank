@@ -1,0 +1,143 @@
+main .movie {
+  padding: 24px 0;
+}
+
+main .movie .movie-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  color: var(--text-color);
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  text-decoration: none;
+}
+
+main .movie .movie-back:hover {
+  color: var(--accent-gold);
+  text-decoration: none;
+}
+
+main .movie .movie-back svg {
+  height: 14px;
+  width: 14px;
+}
+
+main .movie .movie-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+main .movie .movie-poster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  background-color: var(--light-color);
+  color: var(--dark-color);
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-s);
+  text-align: center;
+  border-radius: 4px;
+}
+
+main .movie .movie-info h1 {
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-m);
+  margin: 0 0 8px;
+}
+
+main .movie .movie-meta {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  color: var(--dark-color);
+  font-style: italic;
+  margin: 0 0 16px;
+}
+
+main .movie .movie-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+main .movie .movie-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 8px 12px;
+  background-color: var(--light-color);
+  border-radius: 4px;
+}
+
+main .movie .movie-score-value {
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-s);
+  line-height: 1;
+}
+
+main .movie .movie-score-label {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  color: var(--dark-color);
+  margin-top: 4px;
+}
+
+main .movie .movie-score-mean {
+  background-color: var(--accent-gold);
+}
+
+main .movie .movie-score-mean .movie-score-value,
+main .movie .movie-score-mean .movie-score-label {
+  /* Always dark, regardless of light/dark theme — this chip's background is a fixed gold,
+     not a theme color, and gold needs dark text for contrast either way. */
+  color: #121012;
+}
+
+main .movie .movie-review h2 {
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-xs);
+  margin: 0 0 8px;
+}
+
+main .movie .movie-review p {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m);
+  margin: 0;
+}
+
+/* Tablet and up */
+@media (width >= 600px) {
+  main .movie {
+    padding: 32px 0;
+  }
+}
+
+/* Desktop and up */
+@media (width >= 900px) {
+  main .movie {
+    padding: 48px 0;
+  }
+
+  main .movie .movie-content {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 40px;
+  }
+
+  main .movie .movie-poster {
+    flex: 0 0 320px;
+    margin: 0;
+  }
+
+  main .movie .movie-info {
+    flex: 1;
+  }
+}

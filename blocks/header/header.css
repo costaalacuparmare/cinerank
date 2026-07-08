@@ -1,6 +1,7 @@
 /* header and nav layout */
 header .nav-wrapper {
-  background-color: var(--background-color);
+  background-color: var(--curtain-color);
+  color: var(--curtain-text-color);
   width: 100%;
   z-index: 2;
   position: fixed;
@@ -58,6 +59,11 @@ header nav a:any-link {
   color: currentcolor;
 }
 
+header nav a:any-link:hover,
+header nav a:any-link:focus-visible {
+  color: var(--accent-gold);
+}
+
 /* hamburger */
 header nav .nav-hamburger {
   grid-area: hamburger;
@@ -72,7 +78,7 @@ header nav .nav-hamburger button {
   border: 0;
   border-radius: 0;
   padding: 0;
-  background-color: var(--background-color);
+  background-color: var(--curtain-color);
   color: inherit;
   overflow: initial;
   text-overflow: initial;
@@ -185,6 +191,28 @@ header nav .nav-sections ul > li > ul > li {
   font-weight: 400;
 }
 
+header nav .nav-sections a[aria-current="page"] {
+  color: var(--accent-gold);
+  border-bottom: 2px solid var(--accent-gold);
+  padding-bottom: 2px;
+}
+
+header nav .nav-theme-toggle svg {
+  height: 20px;
+  width: 20px;
+}
+
+header nav .nav-sections ul > li .nav-icon {
+  display: inline-flex;
+  vertical-align: -4px;
+  margin-right: 4px;
+}
+
+header nav .nav-sections ul > li .nav-icon svg {
+  height: 18px;
+  width: 18px;
+}
+
 @media (width >= 900px) {
   header nav .nav-sections {
     display: block;
@@ -269,4 +297,39 @@ header nav .nav-sections ul > li > ul > li {
 /* tools */
 header nav .nav-tools {
   grid-area: tools;
+  display: flex;
+  align-items: center;
+}
+
+header nav .nav-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+header nav .nav-theme-toggle:hover,
+header nav .nav-theme-toggle:focus-visible {
+  color: var(--accent-gold);
+}
+
+/* dark theme (default): show the sun (click to go light) */
+header nav .nav-theme-toggle .nav-theme-icon-moon {
+  display: none;
+}
+
+/* light theme: show the moon (click to go dark) */
+:root[data-theme="light"] header nav .nav-theme-toggle .nav-theme-icon-sun {
+  display: none;
+}
+
+:root[data-theme="light"] header nav .nav-theme-toggle .nav-theme-icon-moon {
+  display: block;
 }
