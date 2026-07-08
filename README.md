@@ -3,8 +3,7 @@
 A cinephile's movie library: rate films across four categories (Plot, Filmography, Sound, Vibe),
 rank them head-to-head, and plan what to watch, when, and where.
 
-*Personal movie tracking/ranking app, doubling as the EDS test site for the Nightshift project's
-M1 milestone. Started as a Notepad habit; this formalizes and expands it.*
+*Personal movie tracking/ranking app, doubling as the EDS test site*
 
 ---
 
