@@ -34,7 +34,7 @@ function buildEditLink() {
  */
 function buildBackLink() {
   const back = document.createElement('a');
-  back.href = '/';
+  back.href = '/library';
   back.className = 'movie-back';
   back.innerHTML = `${BACK_ICON}<span>Back to Library</span>`;
   back.addEventListener('click', (e) => {

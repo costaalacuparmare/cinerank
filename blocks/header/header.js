@@ -177,12 +177,12 @@ export default async function decorate(block) {
     });
 
     // highlight whichever nav item matches the current page; movie detail pages
-    // (/movies/*) count as being "in" Library even though its link is just "/"
+    // (/movies/*) count as being "in" Library even though its link is /library
     const { pathname } = window.location;
     navSections.querySelectorAll(':scope a[href]').forEach((link) => {
       const linkPath = new URL(link.href).pathname;
       const isCurrent = linkPath === pathname
-        || (linkPath === '/' && pathname.startsWith('/movies/'));
+        || (linkPath === '/library' && pathname.startsWith('/movies/'));
       if (isCurrent) {
         link.setAttribute('aria-current', 'page');
       }

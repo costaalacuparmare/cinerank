@@ -286,6 +286,11 @@ the title/year, your scores, your review, and the metadata block. It'll appear i
 automatically on next publish, no separate step.
 
 If you're logged into da.live in the same browser, each movie's detail page also has an
-**"Edit in DA"** link (top-right, only visible once you've set
-`localStorage.setItem('cinerank-owner', 'true')` in your own browser) that jumps straight to that
-page's editor — a convenience link, not a write feature; it needs no credentials of its own.
+**"Edit in DA"** link (top-right, only visible in "owner mode") that jumps straight to that page's
+editor — a convenience link, not a write feature; it needs no credentials of its own. Calendar's
+"mark watched/missed" chip-cycling (see Feature 3) is gated the same way.
+
+**Turning on owner mode:** visit any page once with `?owner=true` in the URL (e.g.
+`https://main--cinerank--costaalacuparmare.aem.live/calendar?owner=true`) — it's saved to
+`localStorage` in that browser from then on, no devtools needed. (The old way,
+`localStorage.setItem('cinerank-owner', 'true')` in devtools, still works too.)

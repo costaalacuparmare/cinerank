@@ -249,9 +249,13 @@ export default function decorate(block) {
     render();
   });
 
+  const monthNav = document.createElement('div');
+  monthNav.className = 'calendar-nav-month';
+  monthNav.append(prevButton, monthLabel, nextButton, todayButton);
+
   const nav = document.createElement('div');
   nav.className = 'calendar-nav';
-  nav.append(prevButton, monthLabel, nextButton, todayButton, searchInput);
+  nav.append(searchInput, monthNav);
 
   render();
   block.replaceChildren(nav, gridWrap);

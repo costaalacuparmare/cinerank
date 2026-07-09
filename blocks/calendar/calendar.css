@@ -8,8 +8,14 @@ main .calendar-nav {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 16px;
+}
+
+main .calendar-nav-month {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 main .calendar-nav-button {
@@ -33,7 +39,7 @@ main .calendar-nav-button:hover {
 main .calendar-month-label {
   font-family: var(--heading-font-family);
   font-size: var(--heading-font-size-s);
-  min-width: 160px;
+  text-align: center;
 }
 
 main .calendar-today-button {
@@ -53,7 +59,8 @@ main .calendar-today-button:hover {
 }
 
 main .calendar-search {
-  flex: 1 1 160px;
+  flex: 0 1 160px;
+  max-width: 160px;
   border: 1px solid var(--dark-color);
   border-radius: 4px;
   padding: 6px 10px;

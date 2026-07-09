@@ -253,6 +253,30 @@ export default async function decorate(block) {
     actors,
   );
 
+  // Pre-fill filters from the URL (e.g. ?director=Tarantino) so a filtered view is shareable.
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('q')) searchInput.value = urlParams.get('q');
+  if (urlParams.has('director')) directorInput.value = urlParams.get('director');
+  if (urlParams.has('year')) yearInput.value = urlParams.get('year');
+  if (urlParams.has('actor')) actorInput.value = urlParams.get('actor');
+  if (urlParams.has('genre')) genreSelect.value = urlParams.get('genre');
+
+  /**
+   * Keeps the URL in sync with the current filters (no page reload, no history entry per
+   * keystroke) so the visible view can be copied/bookmarked/shared as a direct link.
+   */
+  function syncUrl() {
+    const params = new URLSearchParams();
+    if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
+    if (directorInput.value.trim()) params.set('director', directorInput.value.trim());
+    if (yearInput.value.trim()) params.set('year', yearInput.value.trim());
+    if (actorInput.value.trim()) params.set('actor', actorInput.value.trim());
+    if (genreSelect.value) params.set('genre', genreSelect.value);
+    const query = params.toString();
+    const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    window.history.replaceState(null, '', url);
+  }
+
   function render() {
     const sortOption = SORT_OPTIONS.find((opt) => opt.value === sortSelect.value)
       || SORT_OPTIONS[0];
@@ -270,6 +294,7 @@ export default async function decorate(block) {
     ));
 
     grid.replaceChildren(...[...visible].sort(sortOption.compare).map(buildTile));
+    syncUrl();
   }
 
   searchInput.addEventListener('input', render);

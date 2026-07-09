@@ -12,6 +12,13 @@ import {
   buildBlock,
 } from './aem.js';
 
+// One-time, one-visit way to flip on owner-only UI (the "Edit in DA" link, Calendar's status
+// marking): visit any page with ?owner=true once, and it's remembered via localStorage from
+// then on — no devtools needed.
+if (new URLSearchParams(window.location.search).get('owner') === 'true') {
+  localStorage.setItem('cinerank-owner', 'true');
+}
+
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
   const innerTT = window.trustedTypes.createPolicy('tt-inner', {
     createHTML: (s) => s, // avoid stack overflow
