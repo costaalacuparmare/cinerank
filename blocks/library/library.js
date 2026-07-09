@@ -9,62 +9,42 @@ const GENRE_TAGS = ['cozy', 'unsettling', 'kinetic', 'tense', 'whimsical', 'blea
 const STAR_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
 
 /**
- * @param {Element} cell the cell containing labeled category scores, e.g. "Plot: 9 Vibe: 10"
- * @returns {Object<string, number>} category name -> score
+ * @param {Object<string, number>} scores category name -> score
+ * @returns {number|null} mean of the available category scores, or null if none
  */
-function parseScores(cell) {
-  const scores = {};
-  if (!cell) return scores;
-  const text = cell.textContent;
-  CATEGORIES.forEach((category) => {
-    const match = text.match(new RegExp(`${category}:\\s*(\\d+)`, 'i'));
-    if (match) scores[category] = Number(match[1]);
-  });
-  return scores;
+function computeMean(scores) {
+  const values = CATEGORIES.map((category) => scores[category]).filter(
+    (value) => typeof value === 'number',
+  );
+  if (!values.length) return null;
+  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10;
 }
 
 /**
- * @param {Element} cell the cell that may contain a trailing "Tags: a, b, c" segment
- * @returns {string[]} the tags present in this cell, matched against the curated list
- */
-function parseTags(cell) {
-  if (!cell) return [];
-  const match = cell.textContent.match(/Tags:\s*(.+)$/i);
-  if (!match) return [];
-  const listed = match[1].split(',').map((tag) => tag.trim().toLowerCase());
-  return GENRE_TAGS.filter((tag) => listed.includes(tag));
-}
-
-/**
- * @param {string} title movie title, e.g. "Dune: Part Two (2024)"
- * @returns {number|null} the year, or null if not found
- */
-function parseYear(title) {
-  const match = title.match(/\((\d{4})\)/);
-  return match ? Number(match[1]) : null;
-}
-
-/**
- * Reads one authored row into a plain data object for sorting/filtering/rendering.
- * @param {Element} row [title link, director, mean score, category scores (+ tags)]
+ * Reads one /query-index.json row into a plain data object for sorting/filtering/rendering.
+ * @param {Object} item a row from query-index.json, keyed by the helix-query.yaml properties
  * @returns {Object|null}
  */
-function parseEntry(row) {
-  const [linkCell, directorCell, meanCell, scoresCell] = [...row.children];
-  const link = linkCell?.querySelector('a');
-  if (!link) return null;
+function parseIndexEntry(item) {
+  if (!item.path || !item.title) return null;
 
-  const title = link.textContent.trim();
-  const mean = meanCell?.textContent.trim();
+  const scores = {};
+  CATEGORIES.forEach((category) => {
+    const value = Number(item[`${category.toLowerCase()}-score`]);
+    if (!Number.isNaN(value) && item[`${category.toLowerCase()}-score`]) scores[category] = value;
+  });
+
+  const tags = (item.tags || '').split(',').map((tag) => tag.trim().toLowerCase())
+    .filter((tag) => GENRE_TAGS.includes(tag));
 
   return {
-    href: link.href,
-    title,
-    year: parseYear(title),
-    director: directorCell?.textContent.trim() || '',
-    mean: mean ? Number(mean) : null,
-    scores: parseScores(scoresCell),
-    tags: parseTags(scoresCell),
+    href: item.path,
+    title: item.title,
+    year: item.year ? Number(item.year) : null,
+    director: item.director || '',
+    mean: computeMean(scores),
+    scores,
+    tags,
     poster: null,
   };
 }
@@ -192,19 +172,19 @@ function buildSortSelect() {
 }
 
 /**
- * decorate the library block — the poster-grid landing page listing every movie,
- * with client-side search/sort/filter controls. Each authored row is
- * [title link, director, mean score, category scores (+ optional "Tags:" segment)].
- * Manually authored for now; once movie pages are actually published this can be
- * swapped to read from the EDS query-index instead, since that can't be exercised
- * against local drafts.
+ * decorate the library block — the poster-grid landing page listing every movie, sourced
+ * from the EDS query-index (helix-query.yaml, scoped to /movies/**) rather than an authored
+ * row per movie, so a new movie page shows up here automatically once published, with no
+ * second authoring step. Has client-side search/sort/filter controls.
  * @param {Element} block the block
  */
 export default async function decorate(block) {
-  const entries = [...block.children].map(parseEntry).filter(Boolean);
+  const res = await fetch('/query-index.json');
+  const { data } = res.ok ? await res.json() : { data: [] };
+  const entries = data.map(parseIndexEntry).filter(Boolean);
 
   await Promise.all(entries.map(async (entry) => {
-    const tmdbData = await fetchTmdbData(entry.title);
+    const tmdbData = await fetchTmdbData(`${entry.title} (${entry.year})`);
     entry.poster = tmdbData.poster;
   }));
 

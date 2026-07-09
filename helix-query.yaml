@@ -1,0 +1,34 @@
+version: 1
+indices:
+  movies:
+    include:
+      - /movies/**
+    target: /query-index.json
+    properties:
+      path:
+        select: none
+        value: path
+      title:
+        select: head > meta[property="og:title"]
+        value: attribute(el, 'content')
+      director:
+        select: head > meta[name="director"]
+        value: attribute(el, 'content')
+      year:
+        select: head > meta[name="year"]
+        value: attribute(el, 'content')
+      plot-score:
+        select: head > meta[name="plot-score"]
+        value: attribute(el, 'content')
+      filmography-score:
+        select: head > meta[name="filmography-score"]
+        value: attribute(el, 'content')
+      sound-score:
+        select: head > meta[name="sound-score"]
+        value: attribute(el, 'content')
+      vibe-score:
+        select: head > meta[name="vibe-score"]
+        value: attribute(el, 'content')
+      tags:
+        select: head > meta[name="tags"]
+        value: attribute(el, 'content')

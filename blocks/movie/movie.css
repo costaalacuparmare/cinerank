@@ -2,23 +2,32 @@ main .movie {
   padding: 24px 0;
 }
 
-main .movie .movie-back {
+main .movie .movie-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+main .movie .movie-back,
+main .movie .movie-edit {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 16px;
   color: var(--text-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   text-decoration: none;
 }
 
-main .movie .movie-back:hover {
+main .movie .movie-back:hover,
+main .movie .movie-edit:hover {
   color: var(--accent-gold);
   text-decoration: none;
 }
 
-main .movie .movie-back svg {
+main .movie .movie-back svg,
+main .movie .movie-edit svg {
   height: 14px;
   width: 14px;
 }

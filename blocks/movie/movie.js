@@ -4,6 +4,28 @@ const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
 
 const BACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>';
 
+const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+
+const DA_ORG = 'costaalacuparmare';
+const DA_REPO = 'cinerank';
+
+/**
+ * Builds a link straight to this page's editor in Document Authoring. Not a write
+ * feature itself — it's just a deep link, so it needs no backend and no credentials
+ * here. Only shown when a local "owner mode" flag is set, so visitors don't see a
+ * button that would just prompt them to log into an account they don't have.
+ * @returns {Element}
+ */
+function buildEditLink() {
+  const edit = document.createElement('a');
+  edit.href = `https://da.live/edit#/${DA_ORG}/${DA_REPO}${window.location.pathname}`;
+  edit.target = '_blank';
+  edit.rel = 'noopener';
+  edit.className = 'movie-edit';
+  edit.innerHTML = `${EDIT_ICON}<span>Edit in DA</span>`;
+  return edit;
+}
+
 /**
  * Builds a "back to Library" link. Returns to the previous page via history
  * when it's same-origin (a real "back" from the grid or nav), otherwise
@@ -154,5 +176,12 @@ export default async function decorate(block) {
   content.className = 'movie-content';
   content.append(poster, info);
 
-  block.replaceChildren(buildBackLink(), content);
+  const toolbar = document.createElement('div');
+  toolbar.className = 'movie-toolbar';
+  toolbar.append(buildBackLink());
+  if (localStorage.getItem('cinerank-owner') === 'true') {
+    toolbar.append(buildEditLink());
+  }
+
+  block.replaceChildren(toolbar, content);
 }
