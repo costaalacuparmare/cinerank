@@ -44,9 +44,10 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
    optional review, back-to-Library link, and an owner-only "Edit in DA" deep link), nav bar
    (Library/Versus/Backlog/Calendar, with an active-page highlight), and a `library` poster-grid
    landing page, all correlated together and themed with the theater dark/light toggle. Real TMDB
-   integration (poster/director/cast/summary, both on detail pages and grid tiles), a search bar,
-   and sort/filter by score, title, year, category, director, and genre/vibe tag are all live. The
-   grid is now sourced from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
+   integration (poster/director/cast/summary, both on detail pages and grid tiles), a title search
+   box, sort by score/title/year/category, cross-matching type-ahead filters for year/director/
+   actor, and a genre/vibe dropdown (fixed curated list) are all live. The grid is now sourced
+   from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
    instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
    37 movies currently in the library. See "Adding a new movie" below for the authoring workflow.
 2. **Versus/Duel** — reframed as a public, ephemeral "which do you think is better" toy for
@@ -94,8 +95,10 @@ The core log of everything you've watched, public.
   sliders and see the rankings reshuffle for *them*, client-side, nothing saved. Reframed this way
   it's a fun feature, not a backend requirement
 
-**Library view:** sortable/filterable by any of the above (score, category, director, year, tag,
-platform, etc.) — shipped.
+**Library view:** sortable/filterable by any of the above (score, category, director, actor, year,
+tag, platform, etc.) — shipped. Title search box on top; year/director/actor are type-ahead
+inputs (cross-match as you type) rather than dropdowns, since those pools get too large for a
+plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed.
 
 ---
 
@@ -154,9 +157,12 @@ in this repo.
   somewhere to durably store the adjustment, updated on every comparison
 - **Real "leaving soon" alerts** — proactive, checked periodically even when nobody's visiting
   (needs a cron/serverless job, not just a client-side fetch)
-- **One-tap add-a-movie from your phone**, without opening da.live — needs a serverless function
-  to hold DA credentials safely; da.live's own editor already works from a phone browser as the
-  interim answer
+- **Editing from the live site itself** — both "add a new movie" and "edit an existing movie's
+  score/review" from a button on the public pages are the same underlying need: a write to DA
+  triggered from a visitor's browser, which needs a serverless function to hold credentials
+  safely, not just client-side JS. One backend task covers both, not two. In the meantime,
+  `movie.js` has an owner-only "Edit in DA" link (`localStorage` gated) that's a real convenience
+  but not a save-in-place feature — it just deep-links to da.live's own editor for that page
 - **Personal per-category weights that persist and sync across your devices** — the visitor-facing
   version (Feature 1) is backend-free; this specific version (yours, saved, everywhere) isn't
 - **A genuinely interactive, editable Calendar** — drag-to-reschedule, live editing — vs. the
