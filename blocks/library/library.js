@@ -1,4 +1,9 @@
+import fetchTmdbData from '../../scripts/tmdb.js';
+
 const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
+
+// Fixed curated list (not freeform) — keeps the genre filter a clean dropdown over time.
+const GENRE_TAGS = ['cozy', 'unsettling', 'kinetic', 'tense', 'whimsical', 'bleak', 'epic', 'heartfelt', 'chaotic', 'dreamlike'];
 
 // inline (not <img>-based) so the icon can pick up the chip's currentColor
 const STAR_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
@@ -19,6 +24,18 @@ function parseScores(cell) {
 }
 
 /**
+ * @param {Element} cell the cell that may contain a trailing "Tags: a, b, c" segment
+ * @returns {string[]} the tags present in this cell, matched against the curated list
+ */
+function parseTags(cell) {
+  if (!cell) return [];
+  const match = cell.textContent.match(/Tags:\s*(.+)$/i);
+  if (!match) return [];
+  const listed = match[1].split(',').map((tag) => tag.trim().toLowerCase());
+  return GENRE_TAGS.filter((tag) => listed.includes(tag));
+}
+
+/**
  * @param {string} title movie title, e.g. "Dune: Part Two (2024)"
  * @returns {number|null} the year, or null if not found
  */
@@ -29,7 +46,7 @@ function parseYear(title) {
 
 /**
  * Reads one authored row into a plain data object for sorting/filtering/rendering.
- * @param {Element} row [title link, director, mean score, category scores]
+ * @param {Element} row [title link, director, mean score, category scores (+ tags)]
  * @returns {Object|null}
  */
 function parseEntry(row) {
@@ -47,6 +64,8 @@ function parseEntry(row) {
     director: directorCell?.textContent.trim() || '',
     mean: mean ? Number(mean) : null,
     scores: parseScores(scoresCell),
+    tags: parseTags(scoresCell),
+    poster: null,
   };
 }
 
@@ -61,7 +80,15 @@ function buildTile(entry) {
 
   const poster = document.createElement('div');
   poster.className = 'library-tile-poster';
-  poster.textContent = 'Poster (TMDB pending)';
+  if (entry.poster) {
+    const img = document.createElement('img');
+    img.src = entry.poster;
+    img.alt = `${entry.title} poster`;
+    img.loading = 'lazy';
+    poster.append(img);
+  } else {
+    poster.textContent = 'Poster unavailable';
+  }
   tileLink.append(poster);
 
   const info = document.createElement('div');
@@ -122,22 +149,24 @@ const SORT_OPTIONS = [
 const DEFAULT_SORT = SORT_OPTIONS[0].value;
 
 /**
- * @param {string[]} directors unique director names
- * @returns {Element} a <select> populated with an "All directors" option plus one per director
+ * @param {string} className CSS class for the <select>
+ * @param {string} allLabel label for the "no filter" option
+ * @param {string[]} values the selectable values
+ * @returns {Element}
  */
-function buildDirectorFilter(directors) {
+function buildFilterSelect(className, allLabel, values) {
   const select = document.createElement('select');
-  select.className = 'library-filter';
+  select.className = className;
 
   const allOption = document.createElement('option');
   allOption.value = '';
-  allOption.textContent = 'All directors';
+  allOption.textContent = allLabel;
   select.append(allOption);
 
-  directors.forEach((director) => {
+  values.forEach((value) => {
     const option = document.createElement('option');
-    option.value = director;
-    option.textContent = director;
+    option.value = value;
+    option.textContent = value;
     select.append(option);
   });
 
@@ -164,45 +193,80 @@ function buildSortSelect() {
 
 /**
  * decorate the library block — the poster-grid landing page listing every movie,
- * with client-side sort/filter controls. Each authored row is
- * [title link, director, mean score, category scores]. Manually authored for now;
- * once movie pages are actually published this can be swapped to read from the
- * EDS query-index instead, since that can't be exercised against local drafts.
+ * with client-side search/sort/filter controls. Each authored row is
+ * [title link, director, mean score, category scores (+ optional "Tags:" segment)].
+ * Manually authored for now; once movie pages are actually published this can be
+ * swapped to read from the EDS query-index instead, since that can't be exercised
+ * against local drafts.
  * @param {Element} block the block
  */
-export default function decorate(block) {
+export default async function decorate(block) {
   const entries = [...block.children].map(parseEntry).filter(Boolean);
+
+  await Promise.all(entries.map(async (entry) => {
+    const tmdbData = await fetchTmdbData(entry.title);
+    entry.poster = tmdbData.poster;
+  }));
+
   const directors = [...new Set(entries.map((entry) => entry.director).filter(Boolean))].sort();
+  const years = [...new Set(entries.map((entry) => entry.year).filter(Boolean))]
+    .sort((a, b) => b - a);
 
   const grid = document.createElement('ul');
   grid.className = 'library-grid';
 
+  const searchInput = document.createElement('input');
+  searchInput.type = 'search';
+  searchInput.className = 'library-search';
+  searchInput.placeholder = 'Search titles…';
+
   const sortSelect = buildSortSelect();
-  const filterSelect = buildDirectorFilter(directors);
+  const directorSelect = buildFilterSelect('library-filter-director', 'All directors', directors);
+  const yearSelect = buildFilterSelect('library-filter-year', 'All years', years);
+  const genreSelect = buildFilterSelect('library-filter-genre', 'All genres/vibes', GENRE_TAGS);
 
   function render() {
     const sortOption = SORT_OPTIONS.find((opt) => opt.value === sortSelect.value)
       || SORT_OPTIONS[0];
-    const visible = filterSelect.value
-      ? entries.filter((entry) => entry.director === filterSelect.value)
-      : entries;
+    const query = searchInput.value.trim().toLowerCase();
+
+    const visible = entries.filter((entry) => (
+      (!query || entry.title.toLowerCase().includes(query))
+      && (!directorSelect.value || entry.director === directorSelect.value)
+      && (!yearSelect.value || entry.year === Number(yearSelect.value))
+      && (!genreSelect.value || entry.tags.includes(genreSelect.value))
+    ));
+
     grid.replaceChildren(...[...visible].sort(sortOption.compare).map(buildTile));
   }
 
+  searchInput.addEventListener('input', render);
   sortSelect.addEventListener('change', render);
-  filterSelect.addEventListener('change', render);
+  directorSelect.addEventListener('change', render);
+  yearSelect.addEventListener('change', render);
+  genreSelect.addEventListener('change', render);
 
-  const sortLabel = document.createElement('label');
-  sortLabel.className = 'library-toolbar-field';
-  sortLabel.append('Sort by', sortSelect);
+  const searchGroup = document.createElement('div');
+  searchGroup.className = 'library-toolbar-search';
+  searchGroup.append(searchInput);
 
-  const filterLabel = document.createElement('label');
-  filterLabel.className = 'library-toolbar-field';
-  filterLabel.append('Director', filterSelect);
+  const filterGroup = document.createElement('div');
+  filterGroup.className = 'library-toolbar-filters';
+  [
+    ['Sort by', sortSelect],
+    ['Year', yearSelect],
+    ['Genre/vibe', genreSelect],
+    ['Director', directorSelect],
+  ].forEach(([labelText, select]) => {
+    const label = document.createElement('label');
+    label.className = 'library-toolbar-field';
+    label.append(labelText, select);
+    filterGroup.append(label);
+  });
 
   const toolbar = document.createElement('div');
   toolbar.className = 'library-toolbar';
-  toolbar.append(sortLabel, filterLabel);
+  toolbar.append(searchGroup, filterGroup);
 
   render();
   block.replaceChildren(toolbar, grid);

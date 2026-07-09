@@ -1,8 +1,20 @@
 main .library .library-toolbar {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+main .library .library-toolbar-search {
+  flex: 1 1 220px;
+}
+
+main .library .library-toolbar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 main .library .library-toolbar-field {
@@ -14,8 +26,11 @@ main .library .library-toolbar-field {
   color: var(--dark-color);
 }
 
+main .library .library-search,
 main .library .library-sort,
-main .library .library-filter {
+main .library .library-filter-director,
+main .library .library-filter-year,
+main .library .library-filter-genre {
   border: 1px solid var(--dark-color);
   border-radius: 4px;
   padding: 8px 12px;
@@ -23,6 +38,11 @@ main .library .library-filter {
   color: var(--text-color);
   font: inherit;
   font-size: var(--body-font-size-s);
+}
+
+main .library .library-search {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 main .library > ul {
@@ -54,6 +74,13 @@ main .library .library-tile-poster {
   text-align: center;
   border-radius: 4px;
   padding: 8px;
+  overflow: hidden;
+}
+
+main .library .library-tile-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 main .library .library-tile-info {

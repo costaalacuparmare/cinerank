@@ -1,3 +1,5 @@
+import fetchTmdbData from '../../scripts/tmdb.js';
+
 const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
 
 const BACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>';
@@ -27,25 +29,6 @@ function buildBackLink() {
     }
   });
   return back;
-}
-
-/**
- * Resolves a movie's poster, director, cast, year, and summary.
- * Stubbed for now — no TMDB API key wired up yet. Kept isolated so a real
- * fetch can replace the body without touching the rest of the decoration.
- * @param {string} reference TMDB ID or "Title (Year)" string authored in the block
- * @returns {Promise<{title: string, poster: string|null, director: string|null,
- *   cast: string|null, year: string|null, summary: string|null}>}
- */
-async function fetchTmdbData(reference) {
-  return {
-    title: reference,
-    poster: null,
-    director: null,
-    cast: null,
-    year: null,
-    summary: null,
-  };
 }
 
 /**
@@ -113,7 +96,15 @@ export default async function decorate(block) {
 
   const poster = document.createElement('div');
   poster.className = 'movie-poster';
-  poster.textContent = 'Poster (TMDB pending)';
+  if (tmdbData.poster) {
+    const img = document.createElement('img');
+    img.src = tmdbData.poster;
+    img.alt = `${tmdbData.title} poster`;
+    img.loading = 'lazy';
+    poster.append(img);
+  } else {
+    poster.textContent = 'Poster unavailable';
+  }
 
   const info = document.createElement('div');
   info.className = 'movie-info';
@@ -122,10 +113,21 @@ export default async function decorate(block) {
   heading.textContent = tmdbData.title;
   info.append(heading);
 
+  const metaParts = [];
+  if (tmdbData.director) metaParts.push(`Directed by ${tmdbData.director}`);
+  if (tmdbData.cast) metaParts.push(`Starring ${tmdbData.cast}`);
+  if (tmdbData.year) metaParts.push(tmdbData.year);
   const meta = document.createElement('p');
   meta.className = 'movie-meta';
-  meta.textContent = 'Director, cast, year, and summary loading from TMDB…';
+  meta.textContent = metaParts.length ? metaParts.join(' · ') : 'Director, cast, and year unavailable from TMDB.';
   info.append(meta);
+
+  if (tmdbData.summary) {
+    const summary = document.createElement('p');
+    summary.className = 'movie-summary';
+    summary.textContent = tmdbData.summary;
+    info.append(summary);
+  }
 
   const scoresWrapper = document.createElement('div');
   scoresWrapper.className = 'movie-scores';

@@ -43,6 +43,13 @@ main .movie .movie-poster {
   font-size: var(--body-font-size-s);
   text-align: center;
   border-radius: 4px;
+  overflow: hidden;
+}
+
+main .movie .movie-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 main .movie .movie-info h1 {
@@ -56,6 +63,12 @@ main .movie .movie-meta {
   font-size: var(--body-font-size-xs);
   color: var(--dark-color);
   font-style: italic;
+  margin: 0 0 16px;
+}
+
+main .movie .movie-summary {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-m);
   margin: 0 0 16px;
 }
 
