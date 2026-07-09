@@ -50,16 +50,15 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
    from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
    instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
    Seeded with a real (not generated) slice of Vlad's actual watched movies, each with a genuine
-   4-axis score. A movie with an **11 in any single category** gets a gold border/title on its
-   tile — a deliberate rare-exception flag, not just "high score" (verify against
-   `Object.values(entry.scores).includes(11)` in `library.js` if this ever looks off; the
-   always-gold rating chip on every tile is a separate, unconditional style and easy to confuse
-   with it at a glance). See "Adding a new movie" below for the authoring workflow.
+   4-axis score, all tagged with genre/vibe. A movie whose **overall mean score is above 10** gets
+   a gold border/title on its tile (verify against `entry.mean > 10` in `library.js` if this ever
+   looks off; the always-gold rating chip on every tile is a separate, unconditional style and easy
+   to confuse with it at a glance). See "Adding a new movie" below for the authoring workflow.
 2. **Duels** *(shipped)* — a public, ephemeral "which do you think is better" toy for visitors
-   (see Feature 2) rather than a mechanism that rewrites your library scores. Brackets not built
-   yet, deferred as a separate pass.
-3. **Backlog** — a public "what I'm planning to watch next" display. Needed before Calendar can
-   be meaningfully built.
+   (see Feature 2), including a 16-movie single-elimination **Bracket** mode, rather than a
+   mechanism that rewrites your library scores.
+3. **Backlog** *(shipped v1)* — a public "what I'm planning to watch next" display. Needed before
+   Calendar can be meaningfully built.
 4. **Calendar** — depends on Backlog existing (pulls "want to watch" candidates from it); reframed
    as a display of your plan, not an interactive scheduler (see Feature 3).
 
@@ -85,7 +84,8 @@ The core log of everything you've watched, public.
   a weaker approximation — diffing current providers against an authored "last known platform" on
   each visit — is buildable without one, if worth doing
 - Genre/vibe tags for filtering — a **fixed curated list** (decided, not freeform): cozy,
-  unsettling, kinetic, tense, whimsical, bleak, epic, heartfelt, chaotic, dreamlike
+  unsettling, kinetic, tense, whimsical, bleak, epic, heartfelt, chaotic, dreamlike. All 40 real
+  movies are tagged (2 tags each)
 - **Rewatch history** — each watch logged separately with its own date + score, authored as an
   extra table on that movie's own page. This turned out to not need a backend: it's just richer
   authored content, since nothing needs to query across movies' rewatches, only display one
@@ -103,7 +103,14 @@ The core log of everything you've watched, public.
 **Library view:** sortable/filterable by any of the above (score, category, director, actor, year,
 tag, platform, etc.) — shipped. Title search box on top; year/director/actor are type-ahead
 inputs (cross-match as you type) rather than dropdowns, since those pools get too large for a
-plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed.
+plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed. All text
+inputs (search, year, director, actor) have a small "×" to clear them, matching native search-bar
+affordances.
+
+**Gold highlight:** any movie whose overall mean score is above 10 gets a gold border/title in the
+grid — not "any category hits 11," since a couple of movies have an 11 in one category without a
+mean above 10 (e.g. a 7/11/9/10 spread), and the intent was "the standout movies," not "anything
+with a single outlier score."
 
 ---
 
@@ -111,19 +118,25 @@ plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed
 
 A public, playful comparison toy — not a mechanism that rewrites your library's real scores.
 
-- `/duels` — a `duel` block: **2-4 movies** at once (a `+` button adds a slot, capped at 4).
-  **Random** mode reshuffles that many via "New matchup"; **Custom** mode has a type-ahead picker
-  per slot plus an explicit **Duel** button (doesn't auto-run just because all slots are filled).
-  Switching Random → Custom pre-fills the pickers from whatever the current matchup is. Full
-  4-category + overall stat breakdown across all movies, highest score per row highlighted, plus
-  an overall verdict (ties called out by name if 2+ movies share the top score)
+- `/duels` — a `duel` block with three modes: **Random**, **Custom**, and **Bracket**.
+- **Random/Custom** (2-4 movies): `+`/`−` buttons adjust the slot count within that range.
+  **Random** reshuffles via "New matchup"; **Custom** has a type-ahead picker per slot (each with
+  a clear "×") plus an explicit **Duel** button (doesn't auto-run just because all slots are
+  filled). Custom pickers start **empty** the first time you switch into Custom — they don't
+  inherit whatever Random happened to be showing — but do retain their own values across mode
+  switches (Custom → Random → Custom keeps what you typed). Pickers sit in their own row directly
+  above the matching poster card. Full 4-category + overall stat breakdown across all movies,
+  highest score per row highlighted, plus an overall verdict (ties called out by name if 2+
+  movies share the top score)
+- **Bracket**: auto-generates a 16-movie single-elimination tournament and renders it as an actual
+  bracket tree (CSS grid columns per round, connector lines joining pairs into the next round) —
+  Round of 16 → Quarterfinals → Semifinals → Final. Click a movie to advance it; changing an
+  earlier pick clears any later rounds that depended on it. "New bracket" reshuffles from the full
+  library. Disabled if the library ever drops below 16 movies.
 - Result is **ephemeral** — nothing persists, resets on reload. (The original idea — an
   Elo-style refinement that actually adjusts the underlying stored score, modeled on how the
   restaurant-ranking app **Beli** builds rankings from repeated pairwise picks — is real and worth
   doing eventually, but it wants a backend; see Future work.)
-- **Brackets** — not built yet. Either a static authored "here's my 2026 bracket results" page, or
-  an interactive bracket-runner a visitor can play with (ephemeral, same as the duel) — deferred
-  as its own pass, separate from the core duel
 
 ---
 
