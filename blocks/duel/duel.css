@@ -34,7 +34,43 @@ main .duel .duel-mode-button[aria-pressed='true'] {
   color: #121012;
 }
 
-main .duel .duel-shuffle {
+main .duel .duel-count-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+main .duel .duel-count-label {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-s);
+  color: var(--dark-color);
+}
+
+main .duel .duel-add-button {
+  height: 28px;
+  width: 28px;
+  border: 1px solid var(--dark-color);
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-s);
+  line-height: 1;
+  cursor: pointer;
+}
+
+main .duel .duel-add-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+main .duel .duel-add-button:hover:not(:disabled) {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+main .duel .duel-shuffle,
+main .duel .duel-go {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -46,6 +82,12 @@ main .duel .duel-shuffle {
   font: inherit;
   font-size: var(--body-font-size-s);
   cursor: pointer;
+}
+
+main .duel .duel-go {
+  background-color: var(--accent-gold);
+  color: #121012;
+  border-color: var(--accent-gold);
 }
 
 main .duel .duel-shuffle:hover {
@@ -62,9 +104,11 @@ main .duel .duel-custom-pickers {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  width: 100%;
 }
 
 main .duel .duel-shuffle[hidden],
+main .duel .duel-go[hidden],
 main .duel .duel-custom-pickers[hidden] {
   display: none;
 }
@@ -77,7 +121,7 @@ main .duel .duel-picker-input {
   color: var(--text-color);
   font: inherit;
   font-size: var(--body-font-size-s);
-  width: 160px;
+  width: 140px;
 }
 
 main .duel .duel-stage {
@@ -86,8 +130,9 @@ main .duel .duel-stage {
 }
 
 main .duel .duel-cards {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
@@ -95,7 +140,7 @@ main .duel .duel-cards {
 
 main .duel .duel-vs {
   font-family: var(--heading-font-family);
-  font-size: var(--heading-font-size-s);
+  font-size: var(--body-font-size-s);
   color: var(--accent-gold);
   text-align: center;
 }
@@ -103,6 +148,8 @@ main .duel .duel-vs {
 main .duel .duel-card {
   display: flex;
   flex-direction: column;
+  flex: 0 0 120px;
+  max-width: 120px;
   color: var(--text-color);
   text-decoration: none;
 }
@@ -119,7 +166,7 @@ main .duel .duel-card-poster {
   font-size: var(--body-font-size-xs);
   text-align: center;
   border-radius: 4px;
-  padding: 8px;
+  padding: 6px;
   overflow: hidden;
 }
 
@@ -131,7 +178,7 @@ main .duel .duel-card-poster img {
 
 main .duel .duel-card-title {
   font-family: var(--heading-font-family);
-  font-size: var(--body-font-size-s);
+  font-size: var(--body-font-size-xs);
   margin: 8px 0 0;
 }
 
@@ -155,7 +202,7 @@ main .duel .duel-comparison {
 
 main .duel .duel-stat-row {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 90px repeat(var(--duel-count, 2), 1fr);
   align-items: center;
   gap: 12px;
   padding: 8px 0;
@@ -172,7 +219,6 @@ main .duel .duel-stat-label {
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   color: var(--dark-color);
-  text-align: center;
 }
 
 main .duel .duel-stat-winner {
@@ -189,11 +235,12 @@ main .duel .duel-verdict {
 
 /* Desktop and up */
 @media (width >= 900px) {
-  main .duel .duel-cards {
-    gap: 24px;
+  main .duel .duel-card {
+    flex: 0 0 140px;
+    max-width: 140px;
   }
 
   main .duel .duel-card-title {
-    font-size: var(--body-font-size-m);
+    font-size: var(--body-font-size-s);
   }
 }

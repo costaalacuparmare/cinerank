@@ -1,6 +1,8 @@
 import fetchTmdbData from '../../scripts/tmdb.js';
 
 const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
+const MIN_COUNT = 2;
+const MAX_COUNT = 4;
 
 const SHUFFLE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>';
 
@@ -43,11 +45,11 @@ function parseIndexEntry(item) {
 
 /**
  * @param {Object[]} entries the full movie list
- * @returns {Object[]} two distinct random entries
+ * @param {number} count how many distinct entries to pick
+ * @returns {Object[]}
  */
-function pickRandomPair(entries) {
-  const shuffled = [...entries].sort(() => Math.random() - 0.5);
-  return [shuffled[0], shuffled[1]];
+function pickRandomN(entries, count) {
+  return [...entries].sort(() => Math.random() - 0.5).slice(0, count);
 }
 
 /**
@@ -96,93 +98,109 @@ function buildCard(entry) {
 }
 
 /**
- * @param {string} label row label ("Overall" or a category name)
- * @param {number|null} valueA
- * @param {number|null} valueB
+ * @param {Object[]} entries 2-4 movies
  * @returns {Element}
  */
-function buildStatRow(label, valueA, valueB) {
+function buildCardsRow(entries) {
   const row = document.createElement('div');
-  row.className = 'duel-stat-row';
-
-  const cellA = document.createElement('span');
-  cellA.className = 'duel-stat-value';
-  cellA.textContent = valueA ?? '—';
-
-  const rowLabel = document.createElement('span');
-  rowLabel.className = 'duel-stat-label';
-  rowLabel.textContent = label;
-
-  const cellB = document.createElement('span');
-  cellB.className = 'duel-stat-value';
-  cellB.textContent = valueB ?? '—';
-
-  if (typeof valueA === 'number' && typeof valueB === 'number' && valueA !== valueB) {
-    (valueA > valueB ? cellA : cellB).classList.add('duel-stat-winner');
-  }
-
-  row.append(cellA, rowLabel, cellB);
+  row.className = 'duel-cards';
+  entries.forEach((entry, i) => {
+    row.append(buildCard(entry));
+    if (i < entries.length - 1) {
+      const vs = document.createElement('div');
+      vs.className = 'duel-vs';
+      vs.textContent = 'VS';
+      row.append(vs);
+    }
+  });
   return row;
 }
 
 /**
- * @param {Object} entryA
- * @param {Object} entryB
+ * @param {string} label row label ("Overall" or a category name)
+ * @param {Object[]} entries 2-4 movies
+ * @param {(entry: Object) => number|null} getValue
  * @returns {Element}
  */
-function buildComparison(entryA, entryB) {
+function buildStatRow(label, entries, getValue) {
+  const row = document.createElement('div');
+  row.className = 'duel-stat-row';
+  row.style.setProperty('--duel-count', entries.length);
+
+  const rowLabel = document.createElement('span');
+  rowLabel.className = 'duel-stat-label';
+  rowLabel.textContent = label;
+  row.append(rowLabel);
+
+  const values = entries.map(getValue);
+  const numericValues = values.filter((value) => typeof value === 'number');
+  const max = numericValues.length ? Math.max(...numericValues) : null;
+
+  values.forEach((value) => {
+    const cell = document.createElement('span');
+    cell.className = 'duel-stat-value';
+    cell.textContent = value ?? '—';
+    if (typeof value === 'number' && value === max && numericValues.length > 1) {
+      cell.classList.add('duel-stat-winner');
+    }
+    row.append(cell);
+  });
+
+  return row;
+}
+
+/**
+ * @param {Object[]} entries 2-4 movies
+ * @returns {Element}
+ */
+function buildComparison(entries) {
   const comparison = document.createElement('div');
   comparison.className = 'duel-comparison';
-  comparison.append(buildStatRow('Overall', entryA.mean, entryB.mean));
+  comparison.append(buildStatRow('Overall', entries, (entry) => entry.mean));
   CATEGORIES.forEach((category) => {
-    comparison.append(buildStatRow(category, entryA.scores[category], entryB.scores[category]));
+    comparison.append(buildStatRow(category, entries, (entry) => entry.scores[category]));
   });
   return comparison;
 }
 
 /**
- * @param {Object} entryA
- * @param {Object} entryB
+ * @param {Object[]} entries 2-4 movies
  * @returns {Element}
  */
-function buildVerdict(entryA, entryB) {
+function buildVerdict(entries) {
   const verdict = document.createElement('p');
   verdict.className = 'duel-verdict';
-  if (entryA.mean === null || entryB.mean === null || entryA.mean === entryB.mean) {
+
+  const means = entries.map((entry) => entry.mean).filter((value) => typeof value === 'number');
+  if (means.length < entries.length) {
     verdict.textContent = "It's a tie overall.";
-  } else {
-    const winner = entryA.mean > entryB.mean ? entryA : entryB;
-    verdict.textContent = `${winner.title} wins overall.`;
+    return verdict;
   }
+
+  const max = Math.max(...means);
+  const winners = entries.filter((entry) => entry.mean === max);
+  verdict.textContent = winners.length > 1
+    ? `It's a tie between ${winners.map((entry) => entry.title).join(' and ')}.`
+    : `${winners[0].title} wins overall.`;
   return verdict;
 }
 
 /**
  * @param {string} placeholder placeholder text
- * @param {string[]} titles suggested titles
- * @returns {{input: Element, datalist: Element}}
+ * @param {string} listId shared datalist id
+ * @returns {Element}
  */
-function buildMovieTypeahead(placeholder, titles) {
-  const listId = `duel-picker-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
+function buildMovieTypeahead(placeholder, listId) {
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'duel-picker-input';
   input.placeholder = placeholder;
   input.setAttribute('list', listId);
-
-  const datalist = document.createElement('datalist');
-  datalist.id = listId;
-  titles.forEach((title) => {
-    const option = document.createElement('option');
-    option.value = title;
-    datalist.append(option);
-  });
-
-  return { input, datalist };
+  return input;
 }
 
 /**
- * decorate the duel block — a public, ephemeral "which is better" comparison toy. Two movies
+ * decorate the duel block — a public, ephemeral "which is better" comparison toy. 2-4 movies
  * (random or hand-picked), full stat breakdown side by side. Nothing persists; this never
  * writes back to a movie's real score, by design (see README's "Future work" section).
  * @param {Element} block the block
@@ -193,24 +211,26 @@ export default async function decorate(block) {
   const entries = data.map(parseIndexEntry).filter(Boolean);
   const titles = entries.map((entry) => entry.title).sort();
 
+  const datalistId = 'duel-picker-options';
+  const datalist = document.createElement('datalist');
+  datalist.id = datalistId;
+  titles.forEach((title) => {
+    const option = document.createElement('option');
+    option.value = title;
+    datalist.append(option);
+  });
+
   const stage = document.createElement('div');
   stage.className = 'duel-stage';
 
   let mode = 'random';
-  let current = pickRandomPair(entries);
+  let count = MIN_COUNT;
+  let current = pickRandomN(entries, count);
 
   async function renderStage() {
     stage.textContent = 'Loading…';
-    const [entryA, entryB] = current;
-    await Promise.all([loadPoster(entryA), loadPoster(entryB)]);
-
-    const cards = document.createElement('div');
-    cards.className = 'duel-cards';
-    cards.append(buildCard(entryA), document.createElement('div'), buildCard(entryB));
-    cards.children[1].className = 'duel-vs';
-    cards.children[1].textContent = 'VS';
-
-    stage.replaceChildren(cards, buildComparison(entryA, entryB), buildVerdict(entryA, entryB));
+    await Promise.all(current.map(loadPoster));
+    stage.replaceChildren(buildCardsRow(current), buildComparison(current), buildVerdict(current));
   }
 
   const randomButton = document.createElement('button');
@@ -228,38 +248,75 @@ export default async function decorate(block) {
   shuffleButton.className = 'duel-shuffle';
   shuffleButton.innerHTML = `${SHUFFLE_ICON}<span>New matchup</span>`;
   shuffleButton.addEventListener('click', () => {
-    current = pickRandomPair(entries);
+    current = pickRandomN(entries, count);
     renderStage();
   });
 
-  const { input: pickerA, datalist: datalistA } = buildMovieTypeahead('Movie A…', titles);
-  const { input: pickerB, datalist: datalistB } = buildMovieTypeahead('Movie B…', titles);
+  const duelButton = document.createElement('button');
+  duelButton.type = 'button';
+  duelButton.className = 'duel-go';
+  duelButton.textContent = 'Duel';
 
-  function trySetCustomPair() {
-    const entryA = entries.find((entry) => entry.title === pickerA.value.trim());
-    const entryB = entries.find((entry) => entry.title === pickerB.value.trim());
-    if (entryA && entryB && entryA !== entryB) {
-      current = [entryA, entryB];
+  const pickersWrap = document.createElement('div');
+  pickersWrap.className = 'duel-custom-pickers';
+  let pickers = [];
+
+  function rebuildPickers() {
+    const previousValues = pickers.map((input) => input.value);
+    pickers = Array.from({ length: count }, (_, i) => buildMovieTypeahead(`Movie ${i + 1}…`, datalistId));
+    pickers.forEach((input, i) => { input.value = previousValues[i] || ''; });
+    pickersWrap.replaceChildren(...pickers, datalist);
+  }
+
+  function prefillPickersFromCurrent() {
+    rebuildPickers();
+    current.slice(0, count).forEach((entry, i) => { pickers[i].value = entry.title; });
+  }
+
+  duelButton.addEventListener('click', () => {
+    const picked = pickers
+      .map((input) => entries.find((entry) => entry.title === input.value.trim()))
+      .filter(Boolean);
+    const unique = [...new Set(picked)];
+    if (unique.length === count) {
+      current = unique;
       renderStage();
     }
-  }
-  pickerA.addEventListener('input', trySetCustomPair);
-  pickerB.addEventListener('input', trySetCustomPair);
+  });
 
-  const customPickers = document.createElement('div');
-  customPickers.className = 'duel-custom-pickers';
-  customPickers.append(pickerA, datalistA, pickerB, datalistB);
-  customPickers.hidden = true;
+  const countLabel = document.createElement('span');
+  countLabel.className = 'duel-count-label';
+
+  const addButton = document.createElement('button');
+  addButton.type = 'button';
+  addButton.className = 'duel-add-button';
+  addButton.textContent = '+';
+  addButton.setAttribute('aria-label', 'Add another movie to the duel');
+  addButton.addEventListener('click', () => {
+    if (count >= MAX_COUNT) return;
+    count += 1;
+    countLabel.textContent = `${count} movies`;
+    addButton.disabled = count >= MAX_COUNT;
+    if (mode === 'random') {
+      current = pickRandomN(entries, count);
+      renderStage();
+    } else {
+      rebuildPickers();
+    }
+  });
 
   function setMode(nextMode) {
     mode = nextMode;
     randomButton.setAttribute('aria-pressed', String(mode === 'random'));
     customButton.setAttribute('aria-pressed', String(mode === 'custom'));
     shuffleButton.hidden = mode !== 'random';
-    customPickers.hidden = mode !== 'custom';
+    pickersWrap.hidden = mode !== 'custom';
+    duelButton.hidden = mode !== 'custom';
     if (mode === 'random') {
-      current = pickRandomPair(entries);
+      current = pickRandomN(entries, count);
       renderStage();
+    } else {
+      prefillPickersFromCurrent();
     }
   }
   randomButton.addEventListener('click', () => setMode('random'));
@@ -269,9 +326,14 @@ export default async function decorate(block) {
   modeToggle.className = 'duel-mode-toggle';
   modeToggle.append(randomButton, customButton);
 
+  countLabel.textContent = `${count} movies`;
+  const countControl = document.createElement('div');
+  countControl.className = 'duel-count-control';
+  countControl.append(countLabel, addButton);
+
   const toolbar = document.createElement('div');
   toolbar.className = 'duel-toolbar';
-  toolbar.append(modeToggle, shuffleButton, customPickers);
+  toolbar.append(modeToggle, countControl, shuffleButton, duelButton, pickersWrap);
 
   setMode('random');
   block.replaceChildren(toolbar, stage);
