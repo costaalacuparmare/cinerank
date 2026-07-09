@@ -42,7 +42,7 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
 
 1. **Library** *(shipped v2)* — `movie` detail-page block (TMDB-reference row, 4-axis scores,
    optional review, back-to-Library link, and an owner-only "Edit in DA" deep link), nav bar
-   (Library/Versus/Backlog/Calendar, with an active-page highlight), and a `library` poster-grid
+   (Library/Duels/Backlog/Calendar, with an active-page highlight), and a `library` poster-grid
    landing page, all correlated together and themed with the theater dark/light toggle. Real TMDB
    integration (poster/director/cast/summary, both on detail pages and grid tiles), a title search
    box, sort by score/title/year/category, cross-matching type-ahead filters for year/director/
@@ -50,7 +50,7 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
    from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
    instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
    37 movies currently in the library. See "Adding a new movie" below for the authoring workflow.
-2. **Versus/Duel** — reframed as a public, ephemeral "which do you think is better" toy for
+2. **Duels** — reframed as a public, ephemeral "which do you think is better" toy for
    visitors (see Feature 2) rather than a mechanism that rewrites your library scores. No
    dependency on Backlog/Calendar; can be built any time after Library.
 3. **Backlog** — a public "what I'm planning to watch next" display. Needed before Calendar can
@@ -102,7 +102,7 @@ plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed
 
 ---
 
-## Feature 2 — Versus / Duel / Bracket (name TBD)
+## Feature 2 — Duels
 
 A public, playful comparison toy — not a mechanism that rewrites your library's real scores.
 
@@ -141,7 +141,7 @@ Movies you haven't watched yet, shown publicly, separate from the Library — yo
   - Genre-based lists
   - Director-based lists (filmography tracking — "8 of Villeneuve's 11 watched, 3 to go," linking
     back to Library entries for the ones already seen)
-  - Custom ranked lists (e.g. "must-watch 2026," ranked via the Versus/Bracket toy)
+  - Custom ranked lists (e.g. "must-watch 2026," ranked via the Duels/Bracket toy)
 - Feeds directly into the Calendar display
 
 ---
@@ -153,7 +153,7 @@ often, or logic that needs to run without a page visit triggering it — both me
 backend (e.g. a small serverless function), which is a bigger, separate task from anything else
 in this repo.
 
-- **Versus results that actually adjust library scores** (the original Elo-style idea) — needs
+- **Duel results that actually adjust library scores** (the original Elo-style idea) — needs
   somewhere to durably store the adjustment, updated on every comparison
 - **Real "leaving soon" alerts** — proactive, checked periodically even when nobody's visiting
   (needs a cron/serverless job, not just a client-side fetch)
@@ -178,7 +178,7 @@ in this repo.
   of Feature 1's metadata needs without building a data pipeline from scratch.
 - **Flow diversity for Nightshift's M1 needs:** this concept naturally gives 3+ structurally
   different flows to later plant defects/breakage into — browsing/rating (Library), a comparison
-  interaction (Versus), and a scheduling/planning flow (Calendar) — good variety of interaction
+  interaction (Duels), and a scheduling/planning flow (Calendar) — good variety of interaction
   shapes, plus real external API integration (a more realistic "modern site" surface than static
   content).
 - **Why the reframe helps Nightshift too:** a public, single-writer/many-reader site is a more
@@ -189,7 +189,7 @@ in this repo.
 
 ## Open questions
 
-- [ ] Final name for the Versus/comparison feature
+- [x] Final name for the Versus/comparison feature — **Duels**
 - [ ] Final name for the Backlog/not-watched section ("Progression" vs. "Backlog" vs. other)
 - [x] Whether "vibe" tags are freeform text or a fixed curated set — fixed list, see Feature 1
 - [ ] Which 2-3 of these flows are the actual MVP for M1 vs. built out later

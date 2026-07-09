@@ -229,7 +229,7 @@ export default async function decorate(block) {
   const searchInput = document.createElement('input');
   searchInput.type = 'search';
   searchInput.className = 'library-search';
-  searchInput.placeholder = 'Search titles, directors, actors…';
+  searchInput.placeholder = 'Search titles…';
 
   const sortSelect = buildSortSelect();
   const genreSelect = buildFilterSelect('library-filter-genre', 'All genres/vibes', GENRE_TAGS);
@@ -258,10 +258,7 @@ export default async function decorate(block) {
     const actorQuery = actorInput.value.trim().toLowerCase();
 
     const visible = entries.filter((entry) => (
-      (!query
-        || entry.title.toLowerCase().includes(query)
-        || entry.director.toLowerCase().includes(query)
-        || entry.cast.some((name) => name.toLowerCase().includes(query)))
+      (!query || entry.title.toLowerCase().includes(query))
       && (!directorQuery || entry.director.toLowerCase().includes(directorQuery))
       && (!yearQuery || String(entry.year).includes(yearQuery))
       && (!genreSelect.value || entry.tags.includes(genreSelect.value))

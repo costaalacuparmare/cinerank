@@ -27,7 +27,7 @@ The repository provides the basic structure, blocks, and configuration needed to
 ## What This Project Actually Is
 
 This is **Cinerank**, a personal cinephile movie-tracking/ranking site — not a generic demo. Read
-`README.md` before starting any block work: it defines the 4 real features (Library, Versus/Duel,
+`README.md` before starting any block work: it defines the 4 real features (Library, Duels,
 Calendar, Backlog) and the distinctive 4-axis rating system (Plot/Filmography/Sound/Vibe) that
 everything else is built around. This site also doubles as a test fixture for a separate project
 (Nightshift) that will later walk/validate/self-heal its flows — build real, working flows, not
