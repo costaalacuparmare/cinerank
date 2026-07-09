@@ -73,6 +73,21 @@ main .backlog .backlog-row-title {
   font-size: var(--body-font-size-s);
 }
 
+main .backlog .backlog-row-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+main .backlog .backlog-row-previous {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  color: var(--dark-color);
+  font-style: italic;
+  white-space: nowrap;
+}
+
 main .backlog .backlog-row-status {
   flex-shrink: 0;
   padding: 2px 10px;
@@ -90,9 +105,4 @@ main .backlog .backlog-row-status-to-watch {
 main .backlog .backlog-row-status-needs-rewatch {
   background-color: var(--curtain-color);
   color: var(--curtain-text-color);
-}
-
-main .backlog .backlog-row-status-needs-ranking {
-  background-color: var(--accent-gold);
-  color: #121012;
 }

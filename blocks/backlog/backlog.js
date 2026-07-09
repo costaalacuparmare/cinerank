@@ -1,23 +1,24 @@
 const STATUS_LABELS = {
   'to-watch': 'To watch',
   'needs-rewatch': 'Needs rewatch',
-  'needs-ranking': 'Needs ranking',
 };
 
 /**
  * Reads one authored row into a plain data object.
- * @param {Element} row [title, status]
+ * @param {Element} row [title, status, previous score (optional, needs-rewatch only)]
  * @returns {Object|null}
  */
 function parseEntry(row) {
-  const [titleCell, statusCell] = [...row.children];
+  const [titleCell, statusCell, previousScoreCell] = [...row.children];
   const title = titleCell?.textContent.trim();
   if (!title) return null;
 
   const status = statusCell?.textContent.trim().toLowerCase() || 'to-watch';
+  const previousScore = previousScoreCell?.textContent.trim();
   return {
     title,
     status: STATUS_LABELS[status] ? status : 'to-watch',
+    previousScore: previousScore ? Number(previousScore) : null,
   };
 }
 
@@ -34,11 +35,22 @@ function buildRow(entry) {
   title.textContent = entry.title;
   li.append(title);
 
+  const badges = document.createElement('span');
+  badges.className = 'backlog-row-badges';
+
+  if (entry.previousScore !== null) {
+    const previous = document.createElement('span');
+    previous.className = 'backlog-row-previous';
+    previous.textContent = `Previously: ${entry.previousScore}`;
+    badges.append(previous);
+  }
+
   const status = document.createElement('span');
   status.className = `backlog-row-status backlog-row-status-${entry.status}`;
   status.textContent = STATUS_LABELS[entry.status];
-  li.append(status);
+  badges.append(status);
 
+  li.append(badges);
   return li;
 }
 
@@ -64,10 +76,9 @@ function buildStatusTabs(statuses) {
 
 /**
  * decorate the backlog block — a simple, filterable, searchable checklist of movies not yet
- * confidently in the Library: not-yet-watched, watched-but-needs-rewatch, or watched-but-
- * needs-ranking (the "All Time Favourites" placeholder-11 list). Authored directly on this
- * page as rows (unlike Library, these have no per-movie detail page — there's no score or
- * review to show yet).
+ * confidently in the Library: not-yet-watched, or watched-but-needs-rewatch (shows the
+ * previous, unconfirmed score for reference). Authored directly on this page as rows (unlike
+ * Library, these have no per-movie detail page — there's no confirmed score or review yet).
  * @param {Element} block the block
  */
 export default function decorate(block) {
