@@ -22,22 +22,27 @@ Not the same as the feature numbering above — that's organized by concept, thi
 actual dependency order. Calendar (Feature 3) explicitly depends on Backlog (Feature 4) existing
 first ("pull candidates from the Backlog"), so it can't come before it despite the numbering.
 
-1. **Library** *(shipped v1)* — `movie` detail-page block (TMDB-reference row, 4-axis scores,
+1. **Library** *(shipped v2)* — `movie` detail-page block (TMDB-reference row, 4-axis scores,
    optional review, back-to-Library link), nav bar (Library/Versus/Backlog/Calendar, with an
    active-page highlight), and a `library` poster-grid landing page, all correlated together and
-   themed with the theater dark/light toggle. The grid is currently **manually authored** (one row
-   per movie) rather than sourced from the EDS query-index — query-index can't be exercised
-   against local `drafts/` content since it only indexes pages actually published to the content
-   source. Swapping the grid to read `/query-index.json` is a fast follow once movie pages are for
-   real published/added beyond the initial 3.
+   themed with the theater dark/light toggle. Real TMDB integration (poster/director/cast/summary,
+   both on detail pages and grid tiles), a search bar, and sort/filter by score, title, year,
+   category, director, and genre/vibe tag are all live. The grid is still **manually authored**
+   (one row per movie) rather than sourced from the EDS query-index — query-index can't be
+   exercised against local `drafts/` content since it only indexes pages actually published to the
+   content source. Swapping the grid to read `/query-index.json` is a fast follow once movie pages
+   are for real published/added beyond the initial 3. See "Adding a new movie" below for the
+   authoring workflow.
 2. **Versus/Duel** — no dependency on Backlog/Calendar, just needs Library entries to compare.
    Can be built any time after Library.
 3. **Backlog** — needed before Calendar can be meaningfully built.
 4. **Calendar** — depends on Backlog existing (pulls "want to watch" candidates from it).
 
-Cross-cutting, not tied to one feature, revisit opportunistically: real TMDB API integration
-(currently stubbed in `movie.js`'s `fetchTmdbData()`), accounts (deliberately out of scope —
-personal single-user tool), navbar sizing on mobile (feels small/cramped currently).
+Cross-cutting, not tied to one feature, revisit opportunistically: per-category weights, rewatch
+history, streaming availability/"leaving soon", external ratings (IMDb/RT/Letterboxd), accounts
+(deliberately out of scope — personal single-user tool), a way to add a movie that doesn't require
+a laptop running (needs real backend infra — a serverless function — so it's a bigger, separate
+task; da.live's own editor already works from a phone browser in the meantime).
 
 **Local dev note:** the dev server needs `--html-mount /` alongside `--html-folder drafts` so
 draft content resolves at real paths (`/`, `/nav`, `/movies/...`) instead of under `/drafts/...` —
@@ -60,7 +65,8 @@ The core log of everything you've watched.
 - Streaming availability: which platform, in which country, and **when it's leaving** that
   platform (a "leaving soon" alert for anything on your radar) — plus, since this is personal,
   "other sites" availability too
-- Genre/vibe tags for filtering (e.g. "cozy," "unsettling," "kinetic" — felt tags, not just genre)
+- Genre/vibe tags for filtering — a **fixed curated list** (decided, not freeform): cozy,
+  unsettling, kinetic, tense, whimsical, bleak, epic, heartfelt, chaotic, dreamlike
 - **Rewatch history** — each watch logged separately with its own date + score, so you can see how
   your opinion of a movie changed over time instead of overwriting the old rating
 - **External ratings/notes** — surface how a movie did elsewhere (IMDb, Rotten Tomatoes,
@@ -71,7 +77,8 @@ The core log of everything you've watched.
 **Library view:** sortable/filterable by any of the above (score, category, director, year, tag,
 platform, etc.)
 
-**Still open:** exact 0-10-vs-11 mechanic; whether "vibe" tags are freeform or a curated fixed set.
+**Still open:** exact 0-10-vs-11 mechanic (currently: any category can go to 11, used rarely, no
+special-casing beyond that in the code).
 
 ---
 
@@ -134,10 +141,11 @@ Movies you haven't watched yet live here, not in the Library — they move over 
 
 - [ ] Final name for the Versus/comparison feature
 - [ ] Final name for the Backlog/not-watched section ("Progression" vs. "Backlog" vs. other)
-- [ ] Exact 0-10 / exceptional-11 rating mechanic
-- [ ] Whether "vibe" tags are freeform text or a fixed curated set
+- [x] Whether "vibe" tags are freeform text or a fixed curated set — fixed list, see Feature 1
 - [ ] Versus scoring-adjustment algorithm (how much does a single comparison move a score?)
 - [ ] Which 2-3 of these flows are the actual MVP for M1 vs. built out later
+- [ ] Whether to invest in a "one-tap add movie from anywhere" flow (needs a serverless function)
+      or accept da.live's own editor as good enough for now
 
 ---
 
@@ -171,5 +179,29 @@ npm run lint
 
 1. Add the [AEM Code Sync GitHub App](https://github.com/apps/aem-code-sync) to the repository
 2. Install the [AEM CLI](https://github.com/adobe/helix-cli): `npm install -g @adobe/aem-cli`
-3. Start AEM Proxy: `aem up` (opens your browser at `http://localhost:3000`)
+3. Start AEM Proxy: `aem up --html-folder drafts --html-mount /` (opens your browser at
+   `http://localhost:3000`) — see the roadmap note above on why `--html-mount /` is needed
 4. Open the `cinerank` directory in your favorite IDE and start coding :)
+
+### Adding a new movie
+
+Content (pages) and code (blocks/JS/CSS) are two separate systems here — adding a movie is a
+**content** change, done in Document Authoring (DA) at `https://da.live/#/costaalacuparmare/cinerank`,
+not a code change. Works from any device with a browser, including a phone — no laptop required.
+
+1. In da.live, create a new document under `movies/` (e.g. `movies/your-movie-slug`)
+2. Author the `movie` block with 2-3 rows:
+   - Row 1: the movie's title and year, e.g. `Poor Things (2023)` — this doubles as the TMDB
+     search query, so keep it close to the real title
+   - Row 2: your 4 scores, labeled — `**Plot:** 9 **Filmography:** 8 **Sound:** 7 **Vibe:** 10`
+     (0-10, or 11 for a rare exceptional score)
+   - Row 3 *(optional)*: your personal review, free text
+3. Also add it to the `library` block on the home page (`index`) so it shows up in the grid — one
+   row: `[title link to /movies/your-movie-slug, director, mean score, categories cell]`. The
+   categories cell can also carry `**Tags:** cozy, tense` (any of the fixed genre/vibe list) for
+   the genre filter.
+4. Preview it (DA's own "Preview" action, or ask an agent to hit the Admin API), check it renders
+   right, then publish.
+
+Poster, director, cast, and summary all auto-fill on the live site from TMDB — you only ever type
+the title/year, your scores, and your review.
