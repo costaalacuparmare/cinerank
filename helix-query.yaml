@@ -30,5 +30,5 @@ indices:
         select: head > meta[name="vibe-score"]
         value: attribute(el, 'content')
       tags:
-        select: head > meta[name="tags"]
-        value: attribute(el, 'content')
+        select: head > meta[property="article:tag"]
+        values: attribute(el, 'content')
