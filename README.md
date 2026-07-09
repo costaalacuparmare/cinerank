@@ -41,16 +41,14 @@ actual dependency order. Calendar (Feature 3) explicitly depends on Backlog (Fea
 first ("pull candidates from the Backlog"), so it can't come before it despite the numbering.
 
 1. **Library** *(shipped v2)* — `movie` detail-page block (TMDB-reference row, 4-axis scores,
-   optional review, back-to-Library link), nav bar (Library/Versus/Backlog/Calendar, with an
-   active-page highlight), and a `library` poster-grid landing page, all correlated together and
-   themed with the theater dark/light toggle. Real TMDB integration (poster/director/cast/summary,
-   both on detail pages and grid tiles), a search bar, and sort/filter by score, title, year,
-   category, director, and genre/vibe tag are all live. The grid is still **manually authored**
-   (one row per movie) rather than sourced from the EDS query-index — query-index can't be
-   exercised against local `drafts/` content since it only indexes pages actually published to the
-   content source. Swapping the grid to read `/query-index.json` is a fast follow once movie pages
-   are for real published/added beyond the initial 3. See "Adding a new movie" below for the
-   authoring workflow.
+   optional review, back-to-Library link, and an owner-only "Edit in DA" deep link), nav bar
+   (Library/Versus/Backlog/Calendar, with an active-page highlight), and a `library` poster-grid
+   landing page, all correlated together and themed with the theater dark/light toggle. Real TMDB
+   integration (poster/director/cast/summary, both on detail pages and grid tiles), a search bar,
+   and sort/filter by score, title, year, category, director, and genre/vibe tag are all live. The
+   grid is now sourced from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
+   instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
+   37 movies currently in the library. See "Adding a new movie" below for the authoring workflow.
 2. **Versus/Duel** — reframed as a public, ephemeral "which do you think is better" toy for
    visitors (see Feature 2) rather than a mechanism that rewrites your library scores. No
    dependency on Backlog/Calendar; can be built any time after Library.
@@ -233,6 +231,8 @@ npm run lint
 Content (pages) and code (blocks/JS/CSS) are two separate systems here — adding a movie is a
 **content** change, done in Document Authoring (DA) at `https://da.live/#/costaalacuparmare/cinerank`,
 not a code change. Works from any device with a browser, including a phone — no laptop required.
+**One authoring step** — the grid is query-index-driven, so there's no second row to duplicate
+into a home-page listing anymore.
 
 1. In da.live, create a new document under `movies/` (e.g. `movies/your-movie-slug`)
 2. Author the `movie` block with 2-3 rows:
@@ -241,12 +241,17 @@ not a code change. Works from any device with a browser, including a phone — n
    - Row 2: your 4 scores, labeled — `**Plot:** 9 **Filmography:** 8 **Sound:** 7 **Vibe:** 10`
      (0-10, or 11 for a rare exceptional score)
    - Row 3 *(optional)*: your personal review, free text
-3. Also add it to the `library` block on the home page (`index`) so it shows up in the grid — one
-   row: `[title link to /movies/your-movie-slug, director, mean score, categories cell]`. The
-   categories cell can also carry `**Tags:** cozy, tense` (any of the fixed genre/vibe list) for
-   the genre filter.
+3. Author the `metadata` block (bottom of the page, same doc): `title`, `director`, `year`, the 4
+   `*-score` fields matching row 2, and `tags` (any of the fixed genre/vibe list — this is what
+   the query-index and the grid's filters actually read from, not the visible `movie` block)
 4. Preview it (DA's own "Preview" action, or ask an agent to hit the Admin API), check it renders
-   right, then publish.
+   right, then publish
 
 Poster, director, cast, and summary all auto-fill on the live site from TMDB — you only ever type
-the title/year, your scores, and your review.
+the title/year, your scores, your review, and the metadata block. It'll appear in the grid
+automatically on next publish, no separate step.
+
+If you're logged into da.live in the same browser, each movie's detail page also has an
+**"Edit in DA"** link (top-right, only visible once you've set
+`localStorage.setItem('cinerank-owner', 'true')` in your own browser) that jumps straight to that
+page's editor — a convenience link, not a write feature; it needs no credentials of its own.
