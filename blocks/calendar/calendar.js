@@ -1,20 +1,10 @@
-const DAY_MS = 24 * 60 * 60 * 1000;
 const STATUS_STORAGE_PREFIX = 'cinerank-calendar-status:';
-
-/**
- * @param {Date} date a date with no meaningful time component
- * @returns {string} a short relative label, e.g. "in 5 days", "3 days ago", "today"
- */
-function relativeLabel(date) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dateOnly = new Date(date);
-  dateOnly.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((dateOnly - today) / DAY_MS);
-  if (diffDays === 0) return 'today';
-  if (diffDays > 0) return `in ${diffDays} day${diffDays === 1 ? '' : 's'}`;
-  return `${-diffDays} day${diffDays === -1 ? '' : 's'} ago`;
-}
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const NEXT_STATUS = { planned: 'watched', watched: 'missed', missed: 'planned' };
 
 /**
  * @param {string} title entry title
@@ -23,6 +13,14 @@ function relativeLabel(date) {
  */
 function statusKey(title, date) {
   return `${STATUS_STORAGE_PREFIX}${title}|${date.toISOString()}`;
+}
+
+/**
+ * @param {Date} date any date
+ * @returns {string} a key identifying its calendar day, ignoring time
+ */
+function dayKey(date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
 /**
@@ -51,111 +49,110 @@ function parseEntry(row) {
 
 /**
  * @param {Object} entry parsed calendar entry, mutated in place with the new status
- * @param {string} status "watched" or "missed"
+ * @param {string} status "planned", "watched", or "missed"
  */
 function setStatus(entry, status) {
   entry.status = status;
   localStorage.setItem(statusKey(entry.title, entry.date), status);
 }
 
-const STATUS_LABELS = {
-  watched: '✓ Watched',
-  missed: '✗ Missed',
-};
-
 /**
  * @param {Object} entry parsed calendar entry
+ * @param {boolean} ownerMode whether to make the chip clickable to cycle its status
  * @param {() => void} onChange called after the entry's status changes, to re-render
- * @returns {Element} the <li> row
+ * @returns {Element}
  */
-function buildRow(entry, onChange) {
-  const li = document.createElement('li');
-  li.className = 'calendar-row';
-  const isPast = entry.date < new Date();
-  if (isPast && entry.status === 'planned') li.classList.add('calendar-row-past');
-  if (entry.status !== 'planned') li.classList.add(`calendar-row-${entry.status}`);
+function buildEntryChip(entry, ownerMode, onChange) {
+  const chip = document.createElement(ownerMode ? 'button' : 'div');
+  if (ownerMode) chip.type = 'button';
+  chip.className = `calendar-chip calendar-chip-${entry.status}`;
 
-  const dateBlock = document.createElement('div');
-  dateBlock.className = 'calendar-row-date';
-  const day = document.createElement('span');
-  day.className = 'calendar-row-day';
-  day.textContent = entry.date.toLocaleDateString(undefined, { day: 'numeric' });
-  const month = document.createElement('span');
-  month.className = 'calendar-row-month';
-  month.textContent = entry.date.toLocaleDateString(undefined, { month: 'short' });
-  dateBlock.append(day, month);
-  li.append(dateBlock);
+  const label = document.createElement('span');
+  label.className = 'calendar-chip-title';
+  label.textContent = entry.title;
+  chip.append(label);
 
-  const info = document.createElement('div');
-  info.className = 'calendar-row-info';
-
-  const title = document.createElement('p');
-  title.className = 'calendar-row-title';
-  title.textContent = entry.title;
-  if (STATUS_LABELS[entry.status]) {
-    const badge = document.createElement('span');
-    badge.className = `calendar-row-status-badge calendar-row-status-badge-${entry.status}`;
-    badge.textContent = STATUS_LABELS[entry.status];
-    title.append(' ', badge);
-  }
-  info.append(title);
-
-  const meta = document.createElement('p');
-  meta.className = 'calendar-row-meta';
   const timeLabel = entry.hasTime
     ? entry.date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
     : '';
-  meta.textContent = [timeLabel, entry.where, relativeLabel(entry.date)].filter(Boolean).join(' · ');
-  info.append(meta);
+  chip.title = [timeLabel, entry.where].filter(Boolean).join(' · ') || entry.title;
 
-  li.append(info);
-
-  if (isPast && localStorage.getItem('cinerank-owner') === 'true') {
-    const actions = document.createElement('div');
-    actions.className = 'calendar-row-actions';
-
-    const watchedButton = document.createElement('button');
-    watchedButton.type = 'button';
-    watchedButton.className = 'calendar-row-action';
-    watchedButton.textContent = 'Watched it';
-    watchedButton.addEventListener('click', () => {
-      setStatus(entry, 'watched');
+  if (ownerMode) {
+    chip.addEventListener('click', () => {
+      setStatus(entry, NEXT_STATUS[entry.status]);
       onChange();
     });
-
-    const missedButton = document.createElement('button');
-    missedButton.type = 'button';
-    missedButton.className = 'calendar-row-action';
-    missedButton.textContent = "Didn't get to it";
-    missedButton.addEventListener('click', () => {
-      setStatus(entry, 'missed');
-      onChange();
-    });
-
-    actions.append(watchedButton, missedButton);
-    li.append(actions);
   }
 
-  return li;
+  return chip;
 }
 
 /**
- * decorate the calendar block — a public display of what you're planning to watch, when, and
- * where (a streaming platform, another online source, or a physical venue). Not an interactive
- * scheduler for visitors: authored directly on this page as rows, same pattern as Backlog.
- * Sorted soonest first; past entries are dimmed rather than hidden, since a slipped plan is
- * still useful to see. For the owner only (the same `cinerank-owner` localStorage flag "Edit in
- * DA" uses), past entries get "Watched it" / "Didn't get to it" buttons — this can't write back
- * to the authored content (no backend), so it's a personal, this-device-only status saved to
- * localStorage, not something visitors or other devices see.
+ * @param {number} year full year
+ * @param {number} month 0-indexed month
+ * @param {Map<string, Object[]>} entriesByDay entries grouped by dayKey
+ * @param {boolean} ownerMode whether chips are clickable
+ * @param {() => void} onChange called after a chip's status changes, to re-render
+ * @returns {Element}
+ */
+function buildMonthGrid(year, month, entriesByDay, ownerMode, onChange) {
+  const grid = document.createElement('div');
+  grid.className = 'calendar-month-grid';
+
+  WEEKDAYS.forEach((weekday) => {
+    const head = document.createElement('div');
+    head.className = 'calendar-weekday';
+    head.textContent = weekday;
+    grid.append(head);
+  });
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startOffset = firstOfMonth.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < totalCells; i += 1) {
+    const dayNum = i - startOffset + 1;
+    const cell = document.createElement('div');
+    cell.className = 'calendar-day-cell';
+
+    if (dayNum < 1 || dayNum > daysInMonth) {
+      cell.classList.add('calendar-day-cell-outside');
+    } else {
+      const cellDate = new Date(year, month, dayNum);
+      if (cellDate.getTime() === today.getTime()) cell.classList.add('calendar-day-cell-today');
+      if (cellDate < today) cell.classList.add('calendar-day-cell-past');
+
+      const dayLabel = document.createElement('span');
+      dayLabel.className = 'calendar-day-number';
+      dayLabel.textContent = String(dayNum);
+      cell.append(dayLabel);
+
+      const dayEntries = entriesByDay.get(dayKey(cellDate)) || [];
+      dayEntries.forEach((entry) => cell.append(buildEntryChip(entry, ownerMode, onChange)));
+    }
+
+    grid.append(cell);
+  }
+
+  return grid;
+}
+
+/**
+ * decorate the calendar block — a public month-grid display of what you're planning to watch,
+ * when, and where (a streaming platform, another online source, or a physical venue). Not an
+ * interactive scheduler for visitors: authored directly on this page as rows, same pattern as
+ * Backlog. For the owner only (the same `cinerank-owner` localStorage flag "Edit in DA" uses),
+ * clicking an entry cycles it through planned -> watched -> missed -> planned. This can't write
+ * back to the authored content (no backend), so it's a personal, this-device-only status saved
+ * to localStorage, not something visitors or other devices see.
  * @param {Element} block the block
  */
 export default function decorate(block) {
-  const entries = [...block.children].map(parseEntry).filter(Boolean)
-    .sort((a, b) => a.date - b.date);
-
-  const list = document.createElement('ul');
-  list.className = 'calendar-list';
+  const entries = [...block.children].map(parseEntry).filter(Boolean);
 
   if (!entries.length) {
     const empty = document.createElement('p');
@@ -165,19 +162,97 @@ export default function decorate(block) {
     return;
   }
 
+  const ownerMode = localStorage.getItem('cinerank-owner') === 'true';
+  const entriesByDay = new Map();
+  entries.forEach((entry) => {
+    const key = dayKey(entry.date);
+    if (!entriesByDay.has(key)) entriesByDay.set(key, []);
+    entriesByDay.get(key).push(entry);
+  });
+
+  const today = new Date();
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth();
+
+  const monthLabel = document.createElement('span');
+  monthLabel.className = 'calendar-month-label';
+
+  const prevButton = document.createElement('button');
+  prevButton.type = 'button';
+  prevButton.className = 'calendar-nav-button';
+  prevButton.textContent = '‹';
+  prevButton.setAttribute('aria-label', 'Previous month');
+
+  const nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.className = 'calendar-nav-button';
+  nextButton.textContent = '›';
+  nextButton.setAttribute('aria-label', 'Next month');
+
+  const todayButton = document.createElement('button');
+  todayButton.type = 'button';
+  todayButton.className = 'calendar-today-button';
+  todayButton.textContent = 'Today';
+
   const searchInput = document.createElement('input');
   searchInput.type = 'search';
   searchInput.className = 'calendar-search';
   searchInput.placeholder = 'Search…';
 
+  const gridWrap = document.createElement('div');
+  gridWrap.className = 'calendar-grid-wrap';
+
   function render() {
     const query = searchInput.value.trim().toLowerCase();
-    const visible = entries.filter((entry) => !query || entry.title.toLowerCase().includes(query));
-    list.replaceChildren(...visible.map((entry) => buildRow(entry, render)));
+    entries.forEach((entry) => {
+      const matches = Boolean(query) && entry.title.toLowerCase().includes(query);
+      entry.highlighted = matches;
+    });
+
+    monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+    const grid = buildMonthGrid(viewYear, viewMonth, entriesByDay, ownerMode, render);
+    if (query) {
+      grid.querySelectorAll('.calendar-chip').forEach((chip) => {
+        const title = chip.querySelector('.calendar-chip-title')?.textContent.toLowerCase() || '';
+        chip.classList.toggle('calendar-chip-match', title.includes(query));
+        chip.classList.toggle('calendar-chip-dimmed', !title.includes(query));
+      });
+    }
+    gridWrap.replaceChildren(grid);
   }
 
-  searchInput.addEventListener('input', render);
+  prevButton.addEventListener('click', () => {
+    viewMonth -= 1;
+    if (viewMonth < 0) { viewMonth = 11; viewYear -= 1; }
+    render();
+  });
+  nextButton.addEventListener('click', () => {
+    viewMonth += 1;
+    if (viewMonth > 11) { viewMonth = 0; viewYear += 1; }
+    render();
+  });
+  todayButton.addEventListener('click', () => {
+    viewYear = today.getFullYear();
+    viewMonth = today.getMonth();
+    render();
+  });
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLowerCase();
+    if (query) {
+      const firstMatch = entries.find((entry) => entry.title.toLowerCase().includes(query));
+      if (firstMatch) {
+        viewYear = firstMatch.date.getFullYear();
+        viewMonth = firstMatch.date.getMonth();
+      }
+    }
+    render();
+  });
+
+  const nav = document.createElement('div');
+  nav.className = 'calendar-nav';
+  nav.append(prevButton, monthLabel, nextButton, todayButton, searchInput);
 
   render();
-  block.replaceChildren(searchInput, list);
+  block.replaceChildren(nav, gridWrap);
 }

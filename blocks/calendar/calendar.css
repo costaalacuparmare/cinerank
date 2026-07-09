@@ -1,132 +1,184 @@
-main .calendar {
-  max-width: 700px;
-}
-
-main .calendar .calendar-empty {
+main .calendar-empty {
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-s);
   color: var(--dark-color);
 }
 
-main .calendar .calendar-search {
-  width: 100%;
-  box-sizing: border-box;
+main .calendar-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+main .calendar-nav-button {
+  height: 32px;
+  width: 32px;
+  border: 1px solid var(--dark-color);
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-m);
+  line-height: 1;
+  cursor: pointer;
+}
+
+main .calendar-nav-button:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+main .calendar-month-label {
+  font-family: var(--heading-font-family);
+  font-size: var(--heading-font-size-s);
+  min-width: 160px;
+}
+
+main .calendar-today-button {
+  border: 1px solid var(--dark-color);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-xs);
+  cursor: pointer;
+}
+
+main .calendar-today-button:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+main .calendar-search {
+  flex: 1 1 160px;
   border: 1px solid var(--dark-color);
   border-radius: 4px;
-  padding: 8px 12px;
-  margin-bottom: 16px;
+  padding: 6px 10px;
   background-color: var(--light-color);
   color: var(--text-color);
   font: inherit;
   font-size: var(--body-font-size-s);
 }
 
-main .calendar .calendar-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--light-color);
+main .calendar-grid-wrap {
+  overflow-x: auto;
 }
 
-main .calendar .calendar-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--light-color);
+main .calendar-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(90px, 1fr));
+  gap: 1px;
+  background-color: var(--light-color);
+  min-width: 630px;
 }
 
-main .calendar .calendar-row-past {
-  opacity: 0.5;
-}
-
-main .calendar .calendar-row-missed {
-  opacity: 0.6;
-}
-
-main .calendar .calendar-row-status-badge {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-family: var(--body-font-family);
-  font-size: var(--body-font-size-xs);
-  font-style: normal;
-  vertical-align: middle;
-}
-
-main .calendar .calendar-row-status-badge-watched {
-  background-color: var(--accent-gold);
-  color: #121012;
-}
-
-main .calendar .calendar-row-status-badge-missed {
-  background-color: var(--curtain-color);
-  color: var(--curtain-text-color);
-}
-
-main .calendar .calendar-row-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-main .calendar .calendar-row-action {
-  border: 1px solid var(--dark-color);
-  border-radius: 999px;
-  padding: 4px 12px;
-  background-color: transparent;
-  color: var(--text-color);
-  font: inherit;
-  font-size: var(--body-font-size-xs);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-main .calendar .calendar-row-action:hover {
-  color: var(--accent-gold);
-  border-color: var(--accent-gold);
-}
-
-main .calendar .calendar-row-date {
-  flex: 0 0 48px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 1px solid var(--dark-color);
-  border-radius: 4px;
-  padding: 6px 0;
-}
-
-main .calendar .calendar-row-day {
-  font-family: var(--heading-font-family);
-  font-size: var(--heading-font-size-s);
-  line-height: 1;
-}
-
-main .calendar .calendar-row-month {
+main .calendar-weekday {
+  padding: 8px 4px;
+  background-color: var(--background-color);
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   color: var(--dark-color);
+  text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-main .calendar .calendar-row-info {
-  min-width: 0;
+main .calendar-day-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 84px;
+  padding: 6px;
+  background-color: var(--background-color);
 }
 
-main .calendar .calendar-row-title {
-  font-family: var(--body-font-family);
-  font-size: var(--body-font-size-s);
-  margin: 0;
+main .calendar-day-cell-outside {
+  background-color: var(--light-color);
 }
 
-main .calendar .calendar-row-meta {
+main .calendar-day-cell-past {
+  opacity: 0.6;
+}
+
+main .calendar-day-cell-today {
+  background-color: color-mix(in srgb, var(--accent-gold) 15%, var(--background-color));
+  opacity: 1;
+}
+
+main .calendar-day-number {
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   color: var(--dark-color);
-  font-style: italic;
-  margin: 4px 0 0;
+}
+
+main .calendar-day-cell-today .calendar-day-number {
+  color: var(--accent-gold);
+  font-weight: bold;
+}
+
+main .calendar-chip {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--dark-color);
+  border-radius: 3px;
+  padding: 2px 5px;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+main button.calendar-chip {
+  cursor: pointer;
+}
+
+main button.calendar-chip:hover {
+  border-color: var(--accent-gold);
+}
+
+main .calendar-chip-title {
+  display: block;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+main .calendar-chip-watched {
+  background-color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: #121012;
+}
+
+main .calendar-chip-missed {
+  background-color: var(--curtain-color);
+  border-color: var(--curtain-color);
+  color: var(--curtain-text-color);
+  text-decoration: line-through;
+}
+
+main .calendar-chip-dimmed {
+  opacity: 0.35;
+}
+
+main .calendar-chip-match {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 1px var(--accent-gold);
+}
+
+/* Desktop and up */
+@media (width >= 900px) {
+  main .calendar-month-grid {
+    min-width: 100%;
+  }
+
+  main .calendar-day-cell {
+    min-height: 110px;
+  }
 }
