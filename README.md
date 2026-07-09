@@ -111,9 +111,12 @@ plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed
 
 A public, playful comparison toy — not a mechanism that rewrites your library's real scores.
 
-- `/duels` — a `duel` block: **Random** mode (two random movies, "New matchup" reshuffles) or
-  **Custom** mode (type-ahead pickers for both movies), full 4-category + overall stat breakdown
-  side by side, higher score per row highlighted, plus an overall verdict line
+- `/duels` — a `duel` block: **2-4 movies** at once (a `+` button adds a slot, capped at 4).
+  **Random** mode reshuffles that many via "New matchup"; **Custom** mode has a type-ahead picker
+  per slot plus an explicit **Duel** button (doesn't auto-run just because all slots are filled).
+  Switching Random → Custom pre-fills the pickers from whatever the current matchup is. Full
+  4-category + overall stat breakdown across all movies, highest score per row highlighted, plus
+  an overall verdict (ties called out by name if 2+ movies share the top score)
 - Result is **ephemeral** — nothing persists, resets on reload. (The original idea — an
   Elo-style refinement that actually adjusts the underlying stored score, modeled on how the
   restaurant-ranking app **Beli** builds rankings from repeated pairwise picks — is real and worth
