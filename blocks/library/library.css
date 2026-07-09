@@ -1,3 +1,30 @@
+main .library .library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+main .library .library-toolbar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  color: var(--dark-color);
+}
+
+main .library .library-sort,
+main .library .library-filter {
+  border: 1px solid var(--dark-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  background-color: var(--light-color);
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-s);
+}
+
 main .library > ul {
   list-style: none;
   margin: 0;
