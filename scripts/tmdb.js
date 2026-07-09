@@ -20,18 +20,32 @@ async function tmdbFetch(path) {
   }
 }
 
+const WATCH_REGIONS = ['RO', 'US'];
+
 /**
- * Resolves a movie's poster, director, cast, year, and summary from TMDB.
+ * @param {Object} movie a TMDB movie response with watch/providers appended
+ * @returns {string[]} flatrate (subscription-streaming) provider names, first region with any
+ */
+function extractWatchProviders(movie) {
+  const results = movie?.['watch/providers']?.results || {};
+  const region = WATCH_REGIONS.find((code) => results[code]?.flatrate?.length);
+  if (!region) return [];
+  return results[region].flatrate.map((provider) => provider.provider_name);
+}
+
+/**
+ * Resolves a movie's poster, director, cast, year, summary, and current streaming availability
+ * from TMDB.
  * @param {string} reference TMDB ID, or a "Title (Year)" string authored in the block
  * @returns {Promise<{title: string, poster: string|null, director: string|null,
- *   cast: string|null, year: string|null, summary: string|null}>}
+ *   cast: string|null, year: string|null, summary: string|null, streaming: string[]}>}
  */
 export default async function fetchTmdbData(reference) {
   const trimmed = reference.trim();
   let movie = null;
 
   if (/^\d+$/.test(trimmed)) {
-    movie = await tmdbFetch(`/movie/${trimmed}?append_to_response=credits`);
+    movie = await tmdbFetch(`/movie/${trimmed}?append_to_response=credits,watch/providers`);
   } else {
     const match = trimmed.match(/^(.*?)\s*\((\d{4})\)\s*$/);
     const title = match ? match[1] : trimmed;
@@ -41,13 +55,19 @@ export default async function fetchTmdbData(reference) {
     const searchResult = await tmdbFetch(`/search/movie?${params.toString()}`);
     const candidate = searchResult?.results?.[0];
     if (candidate) {
-      movie = await tmdbFetch(`/movie/${candidate.id}?append_to_response=credits`);
+      movie = await tmdbFetch(`/movie/${candidate.id}?append_to_response=credits,watch/providers`);
     }
   }
 
   if (!movie) {
     return {
-      title: reference, poster: null, director: null, cast: null, year: null, summary: null,
+      title: reference,
+      poster: null,
+      director: null,
+      cast: null,
+      year: null,
+      summary: null,
+      streaming: [],
     };
   }
 
@@ -61,5 +81,6 @@ export default async function fetchTmdbData(reference) {
     cast,
     year: movie.release_date ? movie.release_date.slice(0, 4) : null,
     summary: movie.overview || null,
+    streaming: extractWatchProviders(movie),
   };
 }

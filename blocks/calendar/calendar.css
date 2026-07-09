@@ -31,6 +31,7 @@ main .calendar .calendar-list {
 main .calendar .calendar-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 12px 0;
   border-bottom: 1px solid var(--light-color);
@@ -38,6 +39,54 @@ main .calendar .calendar-row {
 
 main .calendar .calendar-row-past {
   opacity: 0.5;
+}
+
+main .calendar .calendar-row-missed {
+  opacity: 0.6;
+}
+
+main .calendar .calendar-row-status-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  font-style: normal;
+  vertical-align: middle;
+}
+
+main .calendar .calendar-row-status-badge-watched {
+  background-color: var(--accent-gold);
+  color: #121012;
+}
+
+main .calendar .calendar-row-status-badge-missed {
+  background-color: var(--curtain-color);
+  color: var(--curtain-text-color);
+}
+
+main .calendar .calendar-row-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+main .calendar .calendar-row-action {
+  border: 1px solid var(--dark-color);
+  border-radius: 999px;
+  padding: 4px 12px;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-xs);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+main .calendar .calendar-row-action:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
 }
 
 main .calendar .calendar-row-date {
