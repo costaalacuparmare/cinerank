@@ -41,8 +41,8 @@
   --heading-font-size-s: 24px;
   --heading-font-size-xs: 22px;
 
-  /* nav height */
-  --nav-height: 64px;
+  /* nav height (bigger on mobile — the default felt cramped for a touch target) */
+  --nav-height: 76px;
 }
 
 /* light "matinee" palette — cream stage, same burgundy curtain/gold trim for continuity */
@@ -86,6 +86,9 @@
     --heading-font-size-m: 22px;
     --heading-font-size-s: 20px;
     --heading-font-size-xs: 18px;
+
+    /* nav height */
+    --nav-height: 64px;
   }
 }
 

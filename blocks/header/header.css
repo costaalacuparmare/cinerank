@@ -67,13 +67,17 @@ header nav a:any-link:focus-visible {
 /* hamburger */
 header nav .nav-hamburger {
   grid-area: hamburger;
-  height: 22px;
+  height: 32px;
   display: flex;
   align-items: center;
 }
 
 header nav .nav-hamburger button {
-  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
   margin: 0;
   border: 0;
   border-radius: 0;
@@ -143,6 +147,16 @@ header nav[aria-expanded='true'] .nav-hamburger-icon::after {
     display: none;
     visibility: hidden;
   }
+
+  header nav .nav-theme-toggle {
+    height: 32px;
+    width: 32px;
+  }
+
+  header nav .nav-theme-toggle svg {
+    height: 20px;
+    width: 20px;
+  }
 }
 
 /* brand */
@@ -198,8 +212,8 @@ header nav .nav-sections a[aria-current="page"] {
 }
 
 header nav .nav-theme-toggle svg {
-  height: 20px;
-  width: 20px;
+  height: 22px;
+  width: 22px;
 }
 
 header nav .nav-sections ul > li .nav-icon {
@@ -305,8 +319,8 @@ header nav .nav-theme-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
-  width: 32px;
+  height: 40px;
+  width: 40px;
   border: 0;
   border-radius: 50%;
   padding: 0;
