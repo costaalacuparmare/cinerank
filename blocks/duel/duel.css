@@ -35,6 +35,10 @@ main .duel .duel-count-control {
   gap: 8px;
 }
 
+main .duel .duel-count-control[hidden] {
+  display: none;
+}
+
 main .duel .duel-count-label {
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-s);
@@ -278,4 +282,144 @@ main .duel .duel-verdict {
   main .duel .duel-card-title {
     font-size: var(--body-font-size-s);
   }
+}
+
+main .duel .bracket-champion {
+  text-align: center;
+  font-family: var(--heading-font-family);
+  font-size: var(--body-font-size-m);
+  color: var(--text-color);
+  margin: 0 0 16px;
+}
+
+main .duel .bracket-stage[hidden] {
+  display: none;
+}
+
+main .duel .bracket-stage {
+  overflow-x: auto;
+}
+
+main .duel .bracket-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-rows: auto repeat(16, minmax(32px, 1fr));
+  gap: 4px 32px;
+  min-width: 680px;
+}
+
+main .duel .bracket-round-title {
+  grid-row: 1;
+  font-family: var(--heading-font-family);
+  font-size: var(--body-font-size-xs);
+  color: var(--dark-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+main .duel .bracket-pair {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 100%;
+}
+
+main .duel .bracket-pair::before {
+  content: '';
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  right: -16px;
+  width: 1px;
+  background-color: var(--dark-color);
+}
+
+main .duel .bracket-matchup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  padding-right: 16px;
+}
+
+main .duel .bracket-matchup::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 16px;
+  height: 1px;
+  background-color: var(--dark-color);
+}
+
+main .duel .bracket-vs {
+  text-align: center;
+  font-family: var(--heading-font-family);
+  font-size: 10px;
+  color: var(--dark-color);
+  text-transform: uppercase;
+}
+
+main .duel .bracket-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 1px solid var(--dark-color);
+  border-radius: 4px;
+  padding: 6px 8px;
+  background-color: var(--light-color);
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-xs);
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+main .duel .bracket-pick:disabled {
+  cursor: default;
+  color: var(--dark-color);
+}
+
+main .duel .bracket-pick-winner {
+  border-color: var(--accent-gold);
+}
+
+main .duel .bracket-pick-loser {
+  opacity: 0.45;
+}
+
+main .duel .bracket-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+main .duel .bracket-card-poster {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 42px;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: var(--background-color);
+}
+
+main .duel .bracket-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+main .duel .bracket-card-title {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -4,6 +4,8 @@ import makeClearable from '../../scripts/clearable-input.js';
 const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
 const MIN_COUNT = 2;
 const MAX_COUNT = 4;
+const BRACKET_SIZE = 16;
+const BRACKET_ROUND_LABELS = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
 
 const SHUFFLE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>';
 
@@ -61,6 +63,20 @@ async function loadPoster(entry) {
   if (entry.poster !== null) return;
   const tmdbData = await fetchTmdbData(`${entry.title} (${entry.year})`);
   entry.poster = tmdbData.poster || '';
+}
+
+/**
+ * Loads posters a few at a time instead of all at once, so a large batch (e.g. a 16-movie
+ * bracket) doesn't fire enough parallel TMDB requests to trip its rate limit.
+ * @param {Object[]} entriesList movie entries to load posters for
+ * @param {number} concurrency how many requests to run at once
+ * @returns {Promise<void>}
+ */
+async function loadPostersBatched(entriesList, concurrency = 4) {
+  for (let i = 0; i < entriesList.length; i += concurrency) {
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.all(entriesList.slice(i, i + concurrency).map(loadPoster));
+  }
 }
 
 /**
@@ -201,6 +217,72 @@ function buildMovieTypeahead(placeholder, listId) {
 }
 
 /**
+ * @param {Object} entry a movie entry
+ * @returns {Element}
+ */
+function buildBracketCard(entry) {
+  const card = document.createElement('span');
+  card.className = 'bracket-card';
+
+  const poster = document.createElement('span');
+  poster.className = 'bracket-card-poster';
+  if (entry.poster) {
+    const img = document.createElement('img');
+    img.src = entry.poster;
+    img.alt = '';
+    img.loading = 'lazy';
+    poster.append(img);
+  }
+  card.append(poster);
+
+  const title = document.createElement('span');
+  title.className = 'bracket-card-title';
+  title.textContent = entry.title;
+  card.append(title);
+
+  return card;
+}
+
+/**
+ * @param {Object|null} a first contestant, or null if not decided yet
+ * @param {Object|null} b second contestant, or null if not decided yet
+ * @param {Object|null} winner the picked winner, if any
+ * @param {(entry: Object) => void} onPick called with the picked entry
+ * @returns {Element}
+ */
+function buildBracketMatchup(a, b, winner, onPick) {
+  const row = document.createElement('div');
+  row.className = 'bracket-matchup';
+
+  [a, b].forEach((entry, i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'bracket-pick';
+    if (!entry) {
+      button.disabled = true;
+      button.textContent = 'TBD';
+    } else {
+      button.append(buildBracketCard(entry));
+      if (winner) {
+        button.disabled = true;
+        button.classList.add(winner === entry ? 'bracket-pick-winner' : 'bracket-pick-loser');
+      } else {
+        button.addEventListener('click', () => onPick(entry));
+      }
+    }
+    row.append(button);
+    if (i === 0) {
+      const vs = document.createElement('span');
+      vs.className = 'bracket-vs';
+      vs.textContent = 'vs';
+      row.append(vs);
+    }
+  });
+
+  return row;
+}
+
+/**
  * decorate the duel block — a public, ephemeral "which is better" comparison toy. 2-4 movies
  * (random or hand-picked), full stat breakdown side by side. Nothing persists; this never
  * writes back to a movie's real score, by design (see README's "Future work" section).
@@ -243,6 +325,15 @@ export default async function decorate(block) {
   customButton.type = 'button';
   customButton.className = 'duel-mode-button';
   customButton.textContent = 'Custom';
+
+  const bracketButton = document.createElement('button');
+  bracketButton.type = 'button';
+  bracketButton.className = 'duel-mode-button';
+  bracketButton.textContent = 'Bracket';
+  if (entries.length < BRACKET_SIZE) {
+    bracketButton.disabled = true;
+    bracketButton.title = `Needs at least ${BRACKET_SIZE} movies in the library`;
+  }
 
   const shuffleButton = document.createElement('button');
   shuffleButton.type = 'button';
@@ -293,6 +384,100 @@ export default async function decorate(block) {
     }
   });
 
+  const bracketStage = document.createElement('div');
+  bracketStage.className = 'bracket-stage';
+  let bracketRounds = null;
+
+  function resetBracket() {
+    const seedSize = Math.min(BRACKET_SIZE, entries.length);
+    const seed = pickRandomN(entries, seedSize);
+    bracketRounds = [seed];
+    for (let size = seedSize / 2; size >= 1; size /= 2) {
+      bracketRounds.push(Array(size).fill(null));
+    }
+  }
+
+  async function renderBracket() {
+    function pick(round, matchIndex, entry) {
+      bracketRounds[round + 1][matchIndex] = entry;
+      for (let r = round + 2; r < bracketRounds.length; r += 1) {
+        bracketRounds[r] = bracketRounds[r].map(() => null);
+      }
+      renderBracket();
+    }
+
+    bracketStage.textContent = 'Loading…';
+    await loadPostersBatched(bracketRounds[0]);
+
+    const champion = bracketRounds[bracketRounds.length - 1][0];
+    const banner = document.createElement('p');
+    banner.className = 'bracket-champion';
+    banner.textContent = champion
+      ? `🏆 ${champion.title} wins the bracket!`
+      : 'Pick a winner in each matchup to advance them.';
+
+    const grid = document.createElement('div');
+    grid.className = 'bracket-grid';
+    grid.style.setProperty('--bracket-rounds', bracketRounds.length - 1);
+
+    for (let round = 0; round < bracketRounds.length - 1; round += 1) {
+      const contestants = bracketRounds[round];
+      const winners = bracketRounds[round + 1];
+      const matchSpan = 2 ** (round + 1);
+
+      const heading = document.createElement('h3');
+      heading.className = 'bracket-round-title';
+      heading.textContent = BRACKET_ROUND_LABELS[round] || `Round ${round + 1}`;
+      heading.style.gridColumn = String(round + 1);
+      grid.append(heading);
+
+      if (winners.length === 1) {
+        const matchup = buildBracketMatchup(
+          contestants[0],
+          contestants[1],
+          winners[0],
+          (entry) => pick(round, 0, entry),
+        );
+        matchup.style.gridColumn = String(round + 1);
+        matchup.style.gridRow = `2 / span ${matchSpan}`;
+        grid.append(matchup);
+      } else {
+        for (let m = 0; m < winners.length; m += 2) {
+          const pair = document.createElement('div');
+          pair.className = 'bracket-pair';
+          pair.style.gridColumn = String(round + 1);
+          pair.style.gridRow = `${2 + (m * matchSpan)} / span ${matchSpan * 2}`;
+          pair.append(
+            buildBracketMatchup(
+              contestants[m * 2],
+              contestants[(m * 2) + 1],
+              winners[m],
+              (entry) => pick(round, m, entry),
+            ),
+            buildBracketMatchup(
+              contestants[(m + 1) * 2],
+              contestants[((m + 1) * 2) + 1],
+              winners[m + 1],
+              (entry) => pick(round, m + 1, entry),
+            ),
+          );
+          grid.append(pair);
+        }
+      }
+    }
+
+    bracketStage.replaceChildren(banner, grid);
+  }
+
+  const bracketShuffleButton = document.createElement('button');
+  bracketShuffleButton.type = 'button';
+  bracketShuffleButton.className = 'duel-shuffle';
+  bracketShuffleButton.innerHTML = `${SHUFFLE_ICON}<span>New bracket</span>`;
+  bracketShuffleButton.addEventListener('click', () => {
+    resetBracket();
+    renderBracket();
+  });
+
   const countLabel = document.createElement('span');
   countLabel.className = 'duel-count-label';
 
@@ -323,27 +508,6 @@ export default async function decorate(block) {
   addButton.addEventListener('click', () => setCount(count + 1));
   minusButton.addEventListener('click', () => setCount(count - 1));
 
-  function setMode(nextMode) {
-    mode = nextMode;
-    randomButton.setAttribute('aria-pressed', String(mode === 'random'));
-    customButton.setAttribute('aria-pressed', String(mode === 'custom'));
-    shuffleButton.hidden = mode !== 'random';
-    pickersWrap.hidden = mode !== 'custom';
-    duelButton.hidden = mode !== 'custom';
-    if (mode === 'random') {
-      current = pickRandomN(entries, count);
-      renderStage();
-    } else if (pickers.length !== count) {
-      rebuildPickers();
-    }
-  }
-  randomButton.addEventListener('click', () => setMode('random'));
-  customButton.addEventListener('click', () => setMode('custom'));
-
-  const modeToggle = document.createElement('div');
-  modeToggle.className = 'duel-mode-toggle';
-  modeToggle.append(randomButton, customButton);
-
   countLabel.textContent = `${count} movies`;
   minusButton.disabled = count <= MIN_COUNT;
   addButton.disabled = count >= MAX_COUNT;
@@ -351,10 +515,40 @@ export default async function decorate(block) {
   countControl.className = 'duel-count-control';
   countControl.append(minusButton, countLabel, addButton);
 
+  function setMode(nextMode) {
+    mode = nextMode;
+    randomButton.setAttribute('aria-pressed', String(mode === 'random'));
+    customButton.setAttribute('aria-pressed', String(mode === 'custom'));
+    bracketButton.setAttribute('aria-pressed', String(mode === 'bracket'));
+    shuffleButton.hidden = mode !== 'random';
+    pickersWrap.hidden = mode !== 'custom';
+    duelButton.hidden = mode !== 'custom';
+    countControl.hidden = mode === 'bracket';
+    bracketShuffleButton.hidden = mode !== 'bracket';
+    stage.hidden = mode === 'bracket';
+    bracketStage.hidden = mode !== 'bracket';
+    if (mode === 'random') {
+      current = pickRandomN(entries, count);
+      renderStage();
+    } else if (mode === 'custom') {
+      if (pickers.length !== count) rebuildPickers();
+    } else if (mode === 'bracket') {
+      if (!bracketRounds) resetBracket();
+      renderBracket();
+    }
+  }
+  randomButton.addEventListener('click', () => setMode('random'));
+  customButton.addEventListener('click', () => setMode('custom'));
+  bracketButton.addEventListener('click', () => setMode('bracket'));
+
+  const modeToggle = document.createElement('div');
+  modeToggle.className = 'duel-mode-toggle';
+  modeToggle.append(randomButton, customButton, bracketButton);
+
   const toolbar = document.createElement('div');
   toolbar.className = 'duel-toolbar';
-  toolbar.append(modeToggle, countControl, shuffleButton, duelButton);
+  toolbar.append(modeToggle, countControl, shuffleButton, duelButton, bracketShuffleButton);
 
   setMode('random');
-  block.replaceChildren(toolbar, pickersWrap, stage);
+  block.replaceChildren(toolbar, pickersWrap, stage, bracketStage);
 }
