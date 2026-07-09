@@ -1,0 +1,98 @@
+main .backlog {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+main .backlog .backlog-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+main .backlog .backlog-search {
+  flex: 1 1 200px;
+  border: 1px solid var(--dark-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  background-color: var(--light-color);
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-s);
+}
+
+main .backlog .backlog-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+main .backlog .backlog-tab {
+  border: 1px solid var(--dark-color);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-xs);
+  cursor: pointer;
+}
+
+main .backlog .backlog-tab.is-active {
+  background-color: var(--accent-gold);
+  color: #121012;
+  border-color: var(--accent-gold);
+}
+
+main .backlog .backlog-count {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  color: var(--dark-color);
+  margin: 0 0 8px;
+}
+
+main .backlog .backlog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--light-color);
+}
+
+main .backlog .backlog-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--light-color);
+}
+
+main .backlog .backlog-row-title {
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-s);
+}
+
+main .backlog .backlog-row-status {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-family: var(--body-font-family);
+  font-size: var(--body-font-size-xs);
+  white-space: nowrap;
+}
+
+main .backlog .backlog-row-status-to-watch {
+  background-color: var(--light-color);
+  color: var(--dark-color);
+}
+
+main .backlog .backlog-row-status-needs-rewatch {
+  background-color: var(--curtain-color);
+  color: var(--curtain-text-color);
+}
+
+main .backlog .backlog-row-status-needs-ranking {
+  background-color: var(--accent-gold);
+  color: #121012;
+}

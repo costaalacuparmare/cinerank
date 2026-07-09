@@ -85,6 +85,14 @@ main .library .library-tile-poster {
   border-radius: 4px;
   padding: 8px;
   overflow: hidden;
+  border: 3px solid transparent;
+  box-sizing: border-box;
+}
+
+/* a category score of 11 is a rare, deliberate exception — flag it visually */
+main .library .library-tile-exceptional .library-tile-poster {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 16px rgb(201 151 43 / 50%);
 }
 
 main .library .library-tile-poster img {
@@ -105,6 +113,10 @@ main .library .library-tile-title {
   font-family: var(--heading-font-family);
   font-size: var(--body-font-size-m);
   margin: 0;
+}
+
+main .library .library-tile-exceptional .library-tile-title {
+  color: var(--accent-gold);
 }
 
 main .library .library-tile-mean {

@@ -59,6 +59,9 @@ function buildTile(entry) {
   const tileLink = document.createElement('a');
   tileLink.href = entry.href;
   tileLink.className = 'library-tile';
+  if (Object.values(entry.scores).includes(11)) {
+    tileLink.classList.add('library-tile-exceptional');
+  }
 
   const poster = document.createElement('div');
   poster.className = 'library-tile-poster';
