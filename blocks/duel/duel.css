@@ -340,6 +340,7 @@ main .duel .bracket-pair::before {
 main .duel .bracket-matchup {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 2px;
   position: relative;
   padding-right: 16px;

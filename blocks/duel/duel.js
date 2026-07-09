@@ -397,6 +397,14 @@ export default async function decorate(block) {
     }
   }
 
+  function restartBracket() {
+    const seed = bracketRounds[0];
+    bracketRounds = [seed];
+    for (let size = seed.length / 2; size >= 1; size /= 2) {
+      bracketRounds.push(Array(size).fill(null));
+    }
+  }
+
   async function renderBracket() {
     function pick(round, matchIndex, entry) {
       bracketRounds[round + 1][matchIndex] = entry;
@@ -478,6 +486,15 @@ export default async function decorate(block) {
     renderBracket();
   });
 
+  const bracketRestartButton = document.createElement('button');
+  bracketRestartButton.type = 'button';
+  bracketRestartButton.className = 'duel-shuffle';
+  bracketRestartButton.textContent = 'Restart this bracket';
+  bracketRestartButton.addEventListener('click', () => {
+    restartBracket();
+    renderBracket();
+  });
+
   const countLabel = document.createElement('span');
   countLabel.className = 'duel-count-label';
 
@@ -525,6 +542,7 @@ export default async function decorate(block) {
     duelButton.hidden = mode !== 'custom';
     countControl.hidden = mode === 'bracket';
     bracketShuffleButton.hidden = mode !== 'bracket';
+    bracketRestartButton.hidden = mode !== 'bracket';
     stage.hidden = mode === 'bracket';
     bracketStage.hidden = mode !== 'bracket';
     if (mode === 'random') {
@@ -547,7 +565,14 @@ export default async function decorate(block) {
 
   const toolbar = document.createElement('div');
   toolbar.className = 'duel-toolbar';
-  toolbar.append(modeToggle, countControl, shuffleButton, duelButton, bracketShuffleButton);
+  toolbar.append(
+    modeToggle,
+    countControl,
+    shuffleButton,
+    duelButton,
+    bracketShuffleButton,
+    bracketRestartButton,
+  );
 
   setMode('random');
   block.replaceChildren(toolbar, pickersWrap, stage, bracketStage);
