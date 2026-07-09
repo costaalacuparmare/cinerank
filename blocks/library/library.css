@@ -30,7 +30,8 @@ main .library .library-search,
 main .library .library-sort,
 main .library .library-filter-director,
 main .library .library-filter-year,
-main .library .library-filter-genre {
+main .library .library-filter-genre,
+main .library .library-filter-actor {
   border: 1px solid var(--dark-color);
   border-radius: 4px;
   padding: 8px 12px;
@@ -43,6 +44,10 @@ main .library .library-filter-genre {
 main .library .library-search {
   width: 100%;
   box-sizing: border-box;
+}
+
+main .library .library-filter-actor {
+  width: 140px;
 }
 
 main .library > ul {

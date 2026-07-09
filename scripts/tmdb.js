@@ -52,7 +52,7 @@ export default async function fetchTmdbData(reference) {
   }
 
   const director = movie.credits?.crew?.find((person) => person.job === 'Director')?.name || null;
-  const cast = movie.credits?.cast?.slice(0, 4).map((person) => person.name).join(', ') || null;
+  const cast = movie.credits?.cast?.slice(0, 6).map((person) => person.name).join(', ') || null;
 
   return {
     title: movie.title || reference,

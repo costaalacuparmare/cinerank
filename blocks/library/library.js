@@ -47,6 +47,7 @@ function parseIndexEntry(item) {
     scores,
     tags,
     poster: null,
+    cast: [],
   };
 }
 
@@ -155,6 +156,33 @@ function buildFilterSelect(className, allLabel, values) {
 }
 
 /**
+ * A free-text input with a native <datalist> of suggestions, so it cross-matches available
+ * options as you type instead of requiring an exact pick from a (potentially huge) dropdown.
+ * @param {string} className CSS class for the <input>
+ * @param {string} placeholder placeholder text
+ * @param {string[]} values suggested values
+ * @returns {{input: Element, datalist: Element}}
+ */
+function buildTypeaheadInput(className, placeholder, values) {
+  const listId = `${className}-options`;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = className;
+  input.placeholder = placeholder;
+  input.setAttribute('list', listId);
+
+  const datalist = document.createElement('datalist');
+  datalist.id = listId;
+  values.forEach((value) => {
+    const option = document.createElement('option');
+    option.value = value;
+    datalist.append(option);
+  });
+
+  return { input, datalist };
+}
+
+/**
  * @returns {Element} a <select> populated with the available sort options
  */
 function buildSortSelect() {
@@ -187,9 +215,11 @@ export default async function decorate(block) {
   await Promise.all(entries.map(async (entry) => {
     const tmdbData = await fetchTmdbData(`${entry.title} (${entry.year})`);
     entry.poster = tmdbData.poster;
+    entry.cast = tmdbData.cast ? tmdbData.cast.split(',').map((name) => name.trim()) : [];
   }));
 
   const directors = [...new Set(entries.map((entry) => entry.director).filter(Boolean))].sort();
+  const actors = [...new Set(entries.flatMap((entry) => entry.cast))].sort();
   const years = [...new Set(entries.map((entry) => entry.year).filter(Boolean))]
     .sort((a, b) => b - a);
 
@@ -199,23 +229,33 @@ export default async function decorate(block) {
   const searchInput = document.createElement('input');
   searchInput.type = 'search';
   searchInput.className = 'library-search';
-  searchInput.placeholder = 'Search titles…';
+  searchInput.placeholder = 'Search titles, directors, actors…';
 
   const sortSelect = buildSortSelect();
   const directorSelect = buildFilterSelect('library-filter-director', 'All directors', directors);
   const yearSelect = buildFilterSelect('library-filter-year', 'All years', years);
   const genreSelect = buildFilterSelect('library-filter-genre', 'All genres/vibes', GENRE_TAGS);
+  const { input: actorInput, datalist: actorDatalist } = buildTypeaheadInput(
+    'library-filter-actor',
+    'Any actor…',
+    actors,
+  );
 
   function render() {
     const sortOption = SORT_OPTIONS.find((opt) => opt.value === sortSelect.value)
       || SORT_OPTIONS[0];
     const query = searchInput.value.trim().toLowerCase();
+    const actorQuery = actorInput.value.trim().toLowerCase();
 
     const visible = entries.filter((entry) => (
-      (!query || entry.title.toLowerCase().includes(query))
+      (!query
+        || entry.title.toLowerCase().includes(query)
+        || entry.director.toLowerCase().includes(query)
+        || entry.cast.some((name) => name.toLowerCase().includes(query)))
       && (!directorSelect.value || entry.director === directorSelect.value)
       && (!yearSelect.value || entry.year === Number(yearSelect.value))
       && (!genreSelect.value || entry.tags.includes(genreSelect.value))
+      && (!actorQuery || entry.cast.some((name) => name.toLowerCase().includes(actorQuery)))
     ));
 
     grid.replaceChildren(...[...visible].sort(sortOption.compare).map(buildTile));
@@ -226,6 +266,7 @@ export default async function decorate(block) {
   directorSelect.addEventListener('change', render);
   yearSelect.addEventListener('change', render);
   genreSelect.addEventListener('change', render);
+  actorInput.addEventListener('input', render);
 
   const searchGroup = document.createElement('div');
   searchGroup.className = 'library-toolbar-search';
@@ -244,6 +285,11 @@ export default async function decorate(block) {
     label.append(labelText, select);
     filterGroup.append(label);
   });
+
+  const actorLabel = document.createElement('label');
+  actorLabel.className = 'library-toolbar-field';
+  actorLabel.append('Actor', actorInput, actorDatalist);
+  filterGroup.append(actorLabel);
 
   const toolbar = document.createElement('div');
   toolbar.className = 'library-toolbar';
