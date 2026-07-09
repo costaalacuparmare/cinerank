@@ -34,7 +34,8 @@ function parseIndexEntry(item) {
     if (!Number.isNaN(value) && item[`${category.toLowerCase()}-score`]) scores[category] = value;
   });
 
-  const tags = (item.tags || '').split(',').map((tag) => tag.trim().toLowerCase())
+  const rawTags = Array.isArray(item.tags) ? item.tags : String(item.tags || '').split(',');
+  const tags = rawTags.map((tag) => tag.trim().toLowerCase())
     .filter((tag) => GENRE_TAGS.includes(tag));
 
   return {
