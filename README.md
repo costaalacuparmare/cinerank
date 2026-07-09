@@ -50,9 +50,9 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
    from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
    instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
    37 movies currently in the library. See "Adding a new movie" below for the authoring workflow.
-2. **Duels** — reframed as a public, ephemeral "which do you think is better" toy for
-   visitors (see Feature 2) rather than a mechanism that rewrites your library scores. No
-   dependency on Backlog/Calendar; can be built any time after Library.
+2. **Duels** *(shipped)* — a public, ephemeral "which do you think is better" toy for visitors
+   (see Feature 2) rather than a mechanism that rewrites your library scores. Brackets not built
+   yet, deferred as a separate pass.
 3. **Backlog** — a public "what I'm planning to watch next" display. Needed before Calendar can
    be meaningfully built.
 4. **Calendar** — depends on Backlog existing (pulls "want to watch" candidates from it); reframed
@@ -102,18 +102,20 @@ plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed
 
 ---
 
-## Feature 2 — Duels
+## Feature 2 — Duels *(shipped)*
 
 A public, playful comparison toy — not a mechanism that rewrites your library's real scores.
 
-- Pick two movies (or let a visitor pick), compare on **one specific category or overall** —
-  "which had better Sound, X or Y?" — computed live from already-authored scores
+- `/duels` — a `duel` block: **Random** mode (two random movies, "New matchup" reshuffles) or
+  **Custom** mode (type-ahead pickers for both movies), full 4-category + overall stat breakdown
+  side by side, higher score per row highlighted, plus an overall verdict line
 - Result is **ephemeral** — nothing persists, resets on reload. (The original idea — an
   Elo-style refinement that actually adjusts the underlying stored score, modeled on how the
   restaurant-ranking app **Beli** builds rankings from repeated pairwise picks — is real and worth
   doing eventually, but it wants a backend; see Future work.)
-- **Brackets** — either a static authored "here's my 2026 bracket results" page, or an interactive
-  bracket-runner a visitor can play with in their own browser (ephemeral, same as above)
+- **Brackets** — not built yet. Either a static authored "here's my 2026 bracket results" page, or
+  an interactive bracket-runner a visitor can play with (ephemeral, same as the duel) — deferred
+  as its own pass, separate from the core duel
 
 ---
 
