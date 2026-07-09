@@ -3,44 +3,6 @@ indices:
   movies:
     include:
       - /movies/**
-    exclude:
-      # Fictional placeholder movies from before the real library data migration. Deleting
-      # their source didn't reliably clear the already-published content-bus cache, so they're
-      # excluded here explicitly rather than relying on that.
-      - /movies/amelie
-      - /movies/arrival
-      - /movies/baby-driver
-      - /movies/blade-runner-2049
-      - /movies/children-of-men
-      - /movies/coco
-      - /movies/drive
-      - /movies/dune-part-two
-      - /movies/everything-everywhere
-      - /movies/get-out
-      - /movies/good-will-hunting
-      - /movies/her
-      - /movies/inception
-      - /movies/interstellar
-      - /movies/klaus
-      - /movies/la-la-land
-      - /movies/little-women
-      - /movies/mad-max-fury-road
-      - /movies/moonlight
-      - /movies/nightcrawler
-      - /movies/no-country-for-old-men
-      - /movies/oppenheimer
-      - /movies/pans-labyrinth
-      - /movies/parasite
-      - /movies/portrait-of-a-lady-on-fire
-      - /movies/spirited-away
-      - /movies/the-dark-knight
-      - /movies/the-godfather
-      - /movies/the-grand-budapest-hotel
-      - /movies/the-lighthouse
-      - /movies/the-truman-show
-      - /movies/there-will-be-blood
-      - /movies/uncut-gems
-      - /movies/whiplash
     target: /query-index.json
     properties:
       path:
@@ -70,3 +32,6 @@ indices:
       tags:
         select: head > meta[property="article:tag"]
         values: attribute(el, 'content')
+      removed:
+        select: head > meta[name="removed"]
+        value: attribute(el, 'content')

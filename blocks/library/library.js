@@ -26,7 +26,7 @@ function computeMean(scores) {
  * @returns {Object|null}
  */
 function parseIndexEntry(item) {
-  if (!item.path || !item.title) return null;
+  if (!item.path || !item.title || item.removed) return null;
 
   const scores = {};
   CATEGORIES.forEach((category) => {
