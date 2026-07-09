@@ -1,4 +1,5 @@
 import fetchTmdbData from '../../scripts/tmdb.js';
+import makeClearable from '../../scripts/clearable-input.js';
 
 const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
 const MIN_COUNT = 2;
@@ -265,12 +266,20 @@ export default async function decorate(block) {
     const previousValues = pickers.map((input) => input.value);
     pickers = Array.from({ length: count }, (_, i) => buildMovieTypeahead(`Movie ${i + 1}…`, datalistId));
     pickers.forEach((input, i) => { input.value = previousValues[i] || ''; });
-    pickersWrap.replaceChildren(...pickers, datalist);
-  }
 
-  function prefillPickersFromCurrent() {
-    rebuildPickers();
-    current.slice(0, count).forEach((entry, i) => { pickers[i].value = entry.title; });
+    const children = [];
+    pickers.forEach((input, i) => {
+      const wrap = makeClearable(input);
+      wrap.classList.add('duel-picker-wrap');
+      children.push(wrap);
+      if (i < pickers.length - 1) {
+        const spacer = document.createElement('div');
+        spacer.className = 'duel-vs duel-picker-spacer';
+        spacer.textContent = 'VS';
+        children.push(spacer);
+      }
+    });
+    pickersWrap.replaceChildren(...children, datalist);
   }
 
   duelButton.addEventListener('click', () => {
@@ -287,23 +296,32 @@ export default async function decorate(block) {
   const countLabel = document.createElement('span');
   countLabel.className = 'duel-count-label';
 
+  const minusButton = document.createElement('button');
+  minusButton.type = 'button';
+  minusButton.className = 'duel-count-button';
+  minusButton.textContent = '−';
+  minusButton.setAttribute('aria-label', 'Remove a movie from the duel');
+
   const addButton = document.createElement('button');
   addButton.type = 'button';
-  addButton.className = 'duel-add-button';
+  addButton.className = 'duel-count-button';
   addButton.textContent = '+';
   addButton.setAttribute('aria-label', 'Add another movie to the duel');
-  addButton.addEventListener('click', () => {
-    if (count >= MAX_COUNT) return;
-    count += 1;
+
+  function setCount(nextCount) {
+    count = Math.max(MIN_COUNT, Math.min(MAX_COUNT, nextCount));
     countLabel.textContent = `${count} movies`;
     addButton.disabled = count >= MAX_COUNT;
+    minusButton.disabled = count <= MIN_COUNT;
     if (mode === 'random') {
       current = pickRandomN(entries, count);
       renderStage();
     } else {
       rebuildPickers();
     }
-  });
+  }
+  addButton.addEventListener('click', () => setCount(count + 1));
+  minusButton.addEventListener('click', () => setCount(count - 1));
 
   function setMode(nextMode) {
     mode = nextMode;
@@ -315,8 +333,8 @@ export default async function decorate(block) {
     if (mode === 'random') {
       current = pickRandomN(entries, count);
       renderStage();
-    } else {
-      prefillPickersFromCurrent();
+    } else if (pickers.length !== count) {
+      rebuildPickers();
     }
   }
   randomButton.addEventListener('click', () => setMode('random'));
@@ -327,14 +345,16 @@ export default async function decorate(block) {
   modeToggle.append(randomButton, customButton);
 
   countLabel.textContent = `${count} movies`;
+  minusButton.disabled = count <= MIN_COUNT;
+  addButton.disabled = count >= MAX_COUNT;
   const countControl = document.createElement('div');
   countControl.className = 'duel-count-control';
-  countControl.append(countLabel, addButton);
+  countControl.append(minusButton, countLabel, addButton);
 
   const toolbar = document.createElement('div');
   toolbar.className = 'duel-toolbar';
-  toolbar.append(modeToggle, countControl, shuffleButton, duelButton, pickersWrap);
+  toolbar.append(modeToggle, countControl, shuffleButton, duelButton);
 
   setMode('random');
-  block.replaceChildren(toolbar, stage);
+  block.replaceChildren(toolbar, pickersWrap, stage);
 }

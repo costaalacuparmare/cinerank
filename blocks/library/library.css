@@ -44,15 +44,45 @@ main .library .library-filter-actor {
 main .library .library-search {
   width: 100%;
   box-sizing: border-box;
+  padding-right: 28px;
 }
 
 main .library .library-filter-director,
 main .library .library-filter-actor {
   width: 140px;
+  padding-right: 28px;
 }
 
 main .library .library-filter-year {
   width: 90px;
+  padding-right: 28px;
+}
+
+main .library .clearable-input {
+  position: relative;
+  display: flex;
+}
+
+main .library .clearable-input-clear {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: 0;
+  background-color: transparent;
+  color: var(--dark-color);
+  font-size: var(--body-font-size-m);
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+main .library .clearable-input-clear:hover {
+  color: var(--accent-gold);
+}
+
+main .library .clearable-input-clear[hidden] {
+  display: none;
 }
 
 main .library > ul {

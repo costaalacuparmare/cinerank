@@ -1,14 +1,9 @@
-main .duel {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 24px 0;
-}
-
 main .duel .duel-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
+  margin-top: 8px;
   margin-bottom: 24px;
 }
 
@@ -46,7 +41,7 @@ main .duel .duel-count-label {
   color: var(--dark-color);
 }
 
-main .duel .duel-add-button {
+main .duel .duel-count-button {
   height: 28px;
   width: 28px;
   border: 1px solid var(--dark-color);
@@ -59,12 +54,12 @@ main .duel .duel-add-button {
   cursor: pointer;
 }
 
-main .duel .duel-add-button:disabled {
+main .duel .duel-count-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-main .duel .duel-add-button:hover:not(:disabled) {
+main .duel .duel-count-button:hover:not(:disabled) {
   color: var(--accent-gold);
   border-color: var(--accent-gold);
 }
@@ -103,8 +98,10 @@ main .duel .duel-shuffle svg {
 main .duel .duel-custom-pickers {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 12px;
-  width: 100%;
+  margin-bottom: 12px;
 }
 
 main .duel .duel-shuffle[hidden],
@@ -113,15 +110,52 @@ main .duel .duel-custom-pickers[hidden] {
   display: none;
 }
 
+main .duel .duel-picker-spacer {
+  visibility: hidden;
+}
+
+main .duel .duel-picker-wrap {
+  flex: 0 0 120px;
+  max-width: 120px;
+}
+
 main .duel .duel-picker-input {
   border: 1px solid var(--dark-color);
   border-radius: 4px;
-  padding: 8px 12px;
+  padding: 8px 28px 8px 12px;
   background-color: var(--light-color);
   color: var(--text-color);
   font: inherit;
   font-size: var(--body-font-size-s);
-  width: 140px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+main .duel .duel-picker-wrap.clearable-input {
+  position: relative;
+  display: flex;
+}
+
+main .duel .clearable-input-clear {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: 0;
+  background-color: transparent;
+  color: var(--dark-color);
+  font-size: var(--body-font-size-m);
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+main .duel .clearable-input-clear:hover {
+  color: var(--accent-gold);
+}
+
+main .duel .clearable-input-clear[hidden] {
+  display: none;
 }
 
 main .duel .duel-stage {
@@ -235,7 +269,8 @@ main .duel .duel-verdict {
 
 /* Desktop and up */
 @media (width >= 900px) {
-  main .duel .duel-card {
+  main .duel .duel-card,
+  main .duel .duel-picker-wrap {
     flex: 0 0 140px;
     max-width: 140px;
   }

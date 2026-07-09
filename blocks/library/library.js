@@ -1,4 +1,5 @@
 import fetchTmdbData from '../../scripts/tmdb.js';
+import makeClearable from '../../scripts/clearable-input.js';
 
 const CATEGORIES = ['Plot', 'Filmography', 'Sound', 'Vibe'];
 
@@ -280,7 +281,7 @@ export default async function decorate(block) {
 
   const searchGroup = document.createElement('div');
   searchGroup.className = 'library-toolbar-search';
-  searchGroup.append(searchInput);
+  searchGroup.append(makeClearable(searchInput));
 
   const filterGroup = document.createElement('div');
   filterGroup.className = 'library-toolbar-filters';
@@ -291,10 +292,10 @@ export default async function decorate(block) {
   filterGroup.append(sortLabel);
 
   [
-    ['Year', yearInput, yearDatalist],
+    ['Year', makeClearable(yearInput), yearDatalist],
     ['Genre/vibe', genreSelect],
-    ['Director', directorInput, directorDatalist],
-    ['Actor', actorInput, actorDatalist],
+    ['Director', makeClearable(directorInput), directorDatalist],
+    ['Actor', makeClearable(actorInput), actorDatalist],
   ].forEach(([labelText, ...fields]) => {
     const label = document.createElement('label');
     label.className = 'library-toolbar-field';
