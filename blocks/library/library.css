@@ -46,8 +46,13 @@ main .library .library-search {
   box-sizing: border-box;
 }
 
+main .library .library-filter-director,
 main .library .library-filter-actor {
   width: 140px;
+}
+
+main .library .library-filter-year {
+  width: 90px;
 }
 
 main .library > ul {

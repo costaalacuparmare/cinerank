@@ -232,9 +232,17 @@ export default async function decorate(block) {
   searchInput.placeholder = 'Search titles, directors, actors…';
 
   const sortSelect = buildSortSelect();
-  const directorSelect = buildFilterSelect('library-filter-director', 'All directors', directors);
-  const yearSelect = buildFilterSelect('library-filter-year', 'All years', years);
   const genreSelect = buildFilterSelect('library-filter-genre', 'All genres/vibes', GENRE_TAGS);
+  const { input: directorInput, datalist: directorDatalist } = buildTypeaheadInput(
+    'library-filter-director',
+    'Any director…',
+    directors,
+  );
+  const { input: yearInput, datalist: yearDatalist } = buildTypeaheadInput(
+    'library-filter-year',
+    'Any year…',
+    years.map(String),
+  );
   const { input: actorInput, datalist: actorDatalist } = buildTypeaheadInput(
     'library-filter-actor',
     'Any actor…',
@@ -245,6 +253,8 @@ export default async function decorate(block) {
     const sortOption = SORT_OPTIONS.find((opt) => opt.value === sortSelect.value)
       || SORT_OPTIONS[0];
     const query = searchInput.value.trim().toLowerCase();
+    const directorQuery = directorInput.value.trim().toLowerCase();
+    const yearQuery = yearInput.value.trim();
     const actorQuery = actorInput.value.trim().toLowerCase();
 
     const visible = entries.filter((entry) => (
@@ -252,8 +262,8 @@ export default async function decorate(block) {
         || entry.title.toLowerCase().includes(query)
         || entry.director.toLowerCase().includes(query)
         || entry.cast.some((name) => name.toLowerCase().includes(query)))
-      && (!directorSelect.value || entry.director === directorSelect.value)
-      && (!yearSelect.value || entry.year === Number(yearSelect.value))
+      && (!directorQuery || entry.director.toLowerCase().includes(directorQuery))
+      && (!yearQuery || String(entry.year).includes(yearQuery))
       && (!genreSelect.value || entry.tags.includes(genreSelect.value))
       && (!actorQuery || entry.cast.some((name) => name.toLowerCase().includes(actorQuery)))
     ));
@@ -263,9 +273,9 @@ export default async function decorate(block) {
 
   searchInput.addEventListener('input', render);
   sortSelect.addEventListener('change', render);
-  directorSelect.addEventListener('change', render);
-  yearSelect.addEventListener('change', render);
   genreSelect.addEventListener('change', render);
+  directorInput.addEventListener('input', render);
+  yearInput.addEventListener('input', render);
   actorInput.addEventListener('input', render);
 
   const searchGroup = document.createElement('div');
@@ -274,22 +284,23 @@ export default async function decorate(block) {
 
   const filterGroup = document.createElement('div');
   filterGroup.className = 'library-toolbar-filters';
+
+  const sortLabel = document.createElement('label');
+  sortLabel.className = 'library-toolbar-field';
+  sortLabel.append('Sort by', sortSelect);
+  filterGroup.append(sortLabel);
+
   [
-    ['Sort by', sortSelect],
-    ['Year', yearSelect],
+    ['Year', yearInput, yearDatalist],
     ['Genre/vibe', genreSelect],
-    ['Director', directorSelect],
-  ].forEach(([labelText, select]) => {
+    ['Director', directorInput, directorDatalist],
+    ['Actor', actorInput, actorDatalist],
+  ].forEach(([labelText, ...fields]) => {
     const label = document.createElement('label');
     label.className = 'library-toolbar-field';
-    label.append(labelText, select);
+    label.append(labelText, ...fields);
     filterGroup.append(label);
   });
-
-  const actorLabel = document.createElement('label');
-  actorLabel.className = 'library-toolbar-field';
-  actorLabel.append('Actor', actorInput, actorDatalist);
-  filterGroup.append(actorLabel);
 
   const toolbar = document.createElement('div');
   toolbar.className = 'library-toolbar';
