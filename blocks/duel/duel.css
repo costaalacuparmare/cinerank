@@ -64,6 +64,11 @@ main .duel .duel-custom-pickers {
   gap: 12px;
 }
 
+main .duel .duel-shuffle[hidden],
+main .duel .duel-custom-pickers[hidden] {
+  display: none;
+}
+
 main .duel .duel-picker-input {
   border: 1px solid var(--dark-color);
   border-radius: 4px;
