@@ -49,7 +49,12 @@ first ("pull candidates from the Backlog"), so it can't come before it despite t
    actor, and a genre/vibe dropdown (fixed curated list) are all live. The grid is now sourced
    from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
    instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
-   37 movies currently in the library. See "Adding a new movie" below for the authoring workflow.
+   Seeded with a real (not generated) slice of Vlad's actual watched movies, each with a genuine
+   4-axis score. A movie with an **11 in any single category** gets a gold border/title on its
+   tile — a deliberate rare-exception flag, not just "high score" (verify against
+   `Object.values(entry.scores).includes(11)` in `library.js` if this ever looks off; the
+   always-gold rating chip on every tile is a separate, unconditional style and easy to confuse
+   with it at a glance). See "Adding a new movie" below for the authoring workflow.
 2. **Duels** *(shipped)* — a public, ephemeral "which do you think is better" toy for visitors
    (see Feature 2) rather than a mechanism that rewrites your library scores. Brackets not built
    yet, deferred as a separate pass.
@@ -134,17 +139,22 @@ Future work.
 
 ---
 
-## Feature 4 — Backlog (not-yet-watched, separate from Library)
+## Feature 4 — Backlog *(shipped v1)*
 
-Movies you haven't watched yet, shown publicly, separate from the Library — you move them over
-(in da.live) once watched.
+Movies not yet confidently in the Library, shown publicly — either genuinely not-yet-watched, or
+watched but without a confirmed score. `/backlog`, a `backlog` block: a simple searchable,
+filterable checklist, two statuses (**to watch**, **needs rewatch** — the latter shows the
+previous, unconfirmed score for reference). Authored directly on the page as rows (title, status,
+optional previous score) — no per-movie detail pages, since these don't have a confirmed score or
+review yet. No TMDB posters in v1, kept simple/fast.
 
-- **Collections** within the backlog:
-  - Genre-based lists
-  - Director-based lists (filmography tracking — "8 of Villeneuve's 11 watched, 3 to go," linking
-    back to Library entries for the ones already seen)
-  - Custom ranked lists (e.g. "must-watch 2026," ranked via the Duels/Bracket toy)
-- Feeds directly into the Calendar display
+Dropped a third status that existed briefly ("needs ranking," for a set of favorites without a
+proper per-category breakdown yet) — simplification, not a data-modeling dead end; that set can
+come back once there's an actual place for it (e.g. once Duels' brackets exist).
+
+**Not built yet:** collections (genre/director/custom-ranked lists), and feeding into the Calendar
+display. Vlad's also considering reworking this to look more like the Library grid (posters,
+TMDB-enriched) rather than the current plain list — undecided, noted here rather than acted on.
 
 ---
 
