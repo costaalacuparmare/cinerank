@@ -3,7 +3,6 @@
 A public showcase of one cinephile's taste: movies rated across four categories (Plot,
 Filmography, Sound, Vibe), browsable and shareable. One person authors it in Document Authoring;
 everyone else — friends, or anyone with the link — browses, sorts, filters, and plays with it.
-No accounts, no backend, no server to run.
 
 **Live:** https://main--cinerank--costaalacuparmare.aem.live/
 
@@ -13,8 +12,7 @@ No accounts, no backend, no server to run.
 
 ### Stats — the homepage (`/`)
 A "by the numbers" dashboard: total movies, average score, a score-distribution chart,
-most-watched director, most common vibe, and the highest-rated movie. Computed entirely from the
-Library's data, no separate authoring.
+most-watched director, most common vibe, and the highest-rated movie.
 
 ### Library (`/library`)
 The core log of everything watched. Each movie gets a poster, director, cast, and summary
@@ -25,7 +23,7 @@ comes out above 10 get a gold highlight. Adding a movie is a single authoring st
 generated from an index of every page under `/movies/**`, so nothing needs duplicating.
 
 ### Duels (`/duels`)
-A playful "which is better" comparison toy — purely for fun, it never changes a movie's real
+A "which is better" comparison toy — purely for fun, it never changes a movie's real
 score. Three modes: **Random** (reshuffles 2–4 movies), **Custom** (pick specific movies via
 type-ahead), and **Bracket** (a 16-movie single-elimination tournament rendered as an actual
 bracket tree — click a movie each round to advance it).
