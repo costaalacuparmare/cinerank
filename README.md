@@ -1,228 +1,67 @@
 # Cinerank
 
 A public showcase of one cinephile's taste: movies rated across four categories (Plot,
-Filmography, Sound, Vibe), browsable and shareable — built so friends can look through the
-library, poke at comparisons, and see what's queued up next, not just the person who authors it.
+Filmography, Sound, Vibe), browsable and shareable. One person authors it in Document Authoring;
+everyone else — friends, or anyone with the link — browses, sorts, filters, and plays with it.
+No accounts, no backend, no server to run.
 
-*Personal movie library, reframed as a "show your friends" site rather than a private tracking
-tool — doubling as the EDS test site for the Nightshift project's M1 milestone. Started as a
-Notepad habit; this formalizes and expands it.*
-
----
-
-## Core concept
-
-A public movie library where every watched movie gets a **4-axis rating** (not a single score).
-The site is read-first: one author (you) logs ratings via Document Authoring; everyone else —
-friends, or anyone with the link — browses, sorts, filters, and (for some features) interacts
-without needing an account. That single-writer/many-readers shape is deliberate — see
-"Why this shape" below.
+**Live:** https://main--cinerank--costaalacuparmare.aem.live/
 
 ---
 
-## Why this shape (read-first, single writer)
+## Features
 
-EDS (this site's platform) has no backend and no database — content is authored by hand in
-Document Authoring, and everything else is static, fast, public delivery. That's a genuinely good
-fit for a showcase site: no accounts, no auth, no server to run, and it plays to EDS's actual
-strength (fast public reading of curated content). It's a poor fit for anything that wants
-frequent writes from an interactive UI, or state that needs to persist and sync across devices.
+### Stats — the homepage (`/`)
+A "by the numbers" dashboard: total movies, average score, a score-distribution chart,
+most-watched director, most common vibe, and the highest-rated movie. Computed entirely from the
+Library's data, no separate authoring.
 
-So the plan going forward: build what fits this shape well now, and call out — rather than force —
-the parts that would need real backend infrastructure. See "Future work — needs a backend" below
-for that list.
+### Library (`/library`)
+The core log of everything watched. Each movie gets a poster, director, cast, and summary
+(fetched live from TMDB), a personal review, and a score in each of the four categories (0–10,
+with a rare 11 for something exceptional). The grid is sortable and filterable by score, year,
+director, actor, or genre/vibe tag, with a title search box on top. Movies whose overall score
+comes out above 10 get a gold highlight. Adding a movie is a single authoring step — the grid is
+generated from an index of every page under `/movies/**`, so nothing needs duplicating.
 
----
+### Duels (`/duels`)
+A playful "which is better" comparison toy — purely for fun, it never changes a movie's real
+score. Three modes: **Random** (reshuffles 2–4 movies), **Custom** (pick specific movies via
+type-ahead), and **Bracket** (a 16-movie single-elimination tournament rendered as an actual
+bracket tree — click a movie each round to advance it).
 
-## Roadmap / build order
+### Backlog (`/backlog`)
+What's not yet confidently in the Library — either not watched yet, or watched but not
+confidently scored. A simple searchable, filterable checklist (to-watch / needs-rewatch).
 
-Not the same as the feature numbering below — that's organized by concept, this is organized by
-actual dependency order. Calendar (Feature 3) explicitly depends on Backlog (Feature 4) existing
-first ("pull candidates from the Backlog"), so it can't come before it despite the numbering.
-
-1. **Library** *(shipped v2)* — `movie` detail-page block (TMDB-reference row, 4-axis scores,
-   optional review, back-to-Library link, and an owner-only "Edit in DA" deep link), nav bar
-   (Library/Duels/Backlog/Calendar, with an active-page highlight), and a `library` poster-grid
-   landing page, all correlated together and themed with the theater dark/light toggle. Real TMDB
-   integration (poster/director/cast/summary, both on detail pages and grid tiles), a title search
-   box, sort by score/title/year/category, cross-matching type-ahead filters for year/director/
-   actor, and a genre/vibe dropdown (fixed curated list) are all live. The grid is now sourced
-   from the **EDS query-index** (`helix-query.yaml`, scoped to `/movies/**`)
-   instead of a manually-duplicated row per movie — adding a movie is one authoring step, not two.
-   Seeded with a real (not generated) slice of Vlad's actual watched movies, each with a genuine
-   4-axis score, all tagged with genre/vibe. A movie whose **overall mean score is above 10** gets
-   a gold border/title on its tile (verify against `entry.mean > 10` in `library.js` if this ever
-   looks off; the always-gold rating chip on every tile is a separate, unconditional style and easy
-   to confuse with it at a glance). See "Adding a new movie" below for the authoring workflow.
-2. **Duels** *(shipped)* — a public, ephemeral "which do you think is better" toy for visitors
-   (see Feature 2), including a 16-movie single-elimination **Bracket** mode, rather than a
-   mechanism that rewrites your library scores.
-3. **Backlog** *(shipped v1)* — a public "what I'm planning to watch next" display. Needed before
-   Calendar can be meaningfully built.
-4. **Calendar** — depends on Backlog existing (pulls "want to watch" candidates from it); reframed
-   as a display of your plan, not an interactive scheduler (see Feature 3).
-
-**Local dev note:** the dev server needs `--html-mount /` alongside `--html-folder drafts` so
-draft content resolves at real paths (`/`, `/nav`, `/movies/...`) instead of under `/drafts/...` —
-run `aem up --html-folder drafts --html-mount /`.
+### Calendar (`/calendar`)
+A month-grid view of what's planned next, and where (streaming platform or a physical venue).
+Clicking a planned movie cycles it through watched → missed → planned — a personal,
+this-device-only note (no backend to write back to), harmless for anyone to try. Includes an
+"Export .ics" button to download the plan into any calendar app.
 
 ---
 
-## Feature 1 — Library (main feature)
+## Why this shape
 
-The core log of everything you've watched, public.
-
-**Per-movie data:**
-- Poster/art, director, main cast, year, short summary (sourced from TMDB — see Technical notes)
-- Personal review — free-text, your own voice, visible to anyone browsing
-- Your rating, on **4 categories**: Plot, Filmography, Sound, Vibe
-  - Each scored 0-10, with an allowance up to **11** for a genuinely exceptional score in that
-    category (currently: any category can go to 11, used rarely, no special-casing beyond that
-    in the code)
-- Streaming availability: which platform, in which country (read-only TMDB fetch, same pattern as
-  posters — no backend needed). A *true* "leaving soon" alert needs a backend (see Future work);
-  a weaker approximation — diffing current providers against an authored "last known platform" on
-  each visit — is buildable without one, if worth doing
-- Genre/vibe tags for filtering — a **fixed curated list** (decided, not freeform): cozy,
-  unsettling, kinetic, tense, whimsical, bleak, epic, heartfelt, chaotic, dreamlike. All 40 real
-  movies are tagged (2 tags each)
-- **Rewatch history** — each watch logged separately with its own date + score, authored as an
-  extra table on that movie's own page. This turned out to not need a backend: it's just richer
-  authored content, since nothing needs to query across movies' rewatches, only display one
-  movie's own list on its own page
-- **External ratings/notes** — surface how a movie did elsewhere (IMDb, Rotten Tomatoes,
-  Letterboxd, etc.) alongside your own 4-axis score, for reference/comparison, not folded into
-  your own rating. Not really an EDS-vs-backend question — it's a data-availability problem on any
-  stack: Letterboxd has no API at all, IMDb/RT don't have good free ones, so this likely needs
-  scraping regardless of architecture
-- **Per-category weights, as a visitor toy** — instead of *your* private weights that need to
-  persist and sync across your devices (a backend problem, see Future work), let any visitor drag
-  sliders and see the rankings reshuffle for *them*, client-side, nothing saved. Reframed this way
-  it's a fun feature, not a backend requirement
-
-**Library view:** sortable/filterable by any of the above (score, category, director, actor, year,
-tag, platform, etc.) — shipped. Title search box on top; year/director/actor are type-ahead
-inputs (cross-match as you type) rather than dropdowns, since those pools get too large for a
-plain `<select>`; genre/vibe stays a dropdown since that list is small and fixed. All text
-inputs (search, year, director, actor) have a small "×" to clear them, matching native search-bar
-affordances.
-
-**Gold highlight:** any movie whose overall mean score is above 10 gets a gold border/title in the
-grid — not "any category hits 11," since a couple of movies have an 11 in one category without a
-mean above 10 (e.g. a 7/11/9/10 spread), and the intent was "the standout movies," not "anything
-with a single outlier score."
+EDS has no backend or database — content is authored by hand and everything else is static,
+public delivery. That's a great fit for a showcase site (fast, no accounts, no server), and a
+poor fit for anything needing frequent writes or state synced across devices. Cinerank leans into
+the former and calls out — rather than forces — the latter; see **Future work** below.
 
 ---
 
-## Feature 2 — Duels *(shipped)*
+## Future work (needs a backend)
 
-A public, playful comparison toy — not a mechanism that rewrites your library's real scores.
+Deliberately not built as-is, since each of these needs either state that changes often outside
+of a page visit, or logic that runs without one triggering it:
 
-- `/duels` — a `duel` block with three modes: **Random**, **Custom**, and **Bracket**.
-- **Random/Custom** (2-4 movies): `+`/`−` buttons adjust the slot count within that range.
-  **Random** reshuffles via "New matchup"; **Custom** has a type-ahead picker per slot (each with
-  a clear "×") plus an explicit **Duel** button (doesn't auto-run just because all slots are
-  filled). Custom pickers start **empty** the first time you switch into Custom — they don't
-  inherit whatever Random happened to be showing — but do retain their own values across mode
-  switches (Custom → Random → Custom keeps what you typed). Pickers sit in their own row directly
-  above the matching poster card. Full 4-category + overall stat breakdown across all movies,
-  highest score per row highlighted, plus an overall verdict (ties called out by name if 2+
-  movies share the top score)
-- **Bracket**: auto-generates a 16-movie single-elimination tournament and renders it as an actual
-  bracket tree (CSS grid columns per round, connector lines joining pairs into the next round) —
-  Round of 16 → Quarterfinals → Semifinals → Final. Click a movie to advance it; changing an
-  earlier pick clears any later rounds that depended on it. "New bracket" reshuffles from the full
-  library. Disabled if the library ever drops below 16 movies.
-- Result is **ephemeral** — nothing persists, resets on reload. (The original idea — an
-  Elo-style refinement that actually adjusts the underlying stored score, modeled on how the
-  restaurant-ranking app **Beli** builds rankings from repeated pairwise picks — is real and worth
-  doing eventually, but it wants a backend; see Future work.)
-
----
-
-## Feature 3 — Calendar
-
-A public display of what you're planning to watch, when, and where — not an interactive scheduler.
-
-- Pull candidates from the Backlog (Feature 4) — movies marked "want to watch"
-- Show a planned date, authored by you (updated the same way you update anything else — da.live)
-- Show **where**: a streaming platform, another online source, or a **physical venue** — e.g.
-  cinema, or a specific retro cinema (Cinema Europa, Bucharest) — so "where" spans both digital and
-  physical options, not just streaming
-
-A genuinely interactive, editable calendar (drag to reschedule, etc.) wants a backend — see
-Future work.
-
----
-
-## Feature 4 — Backlog *(shipped v1)*
-
-Movies not yet confidently in the Library, shown publicly — either genuinely not-yet-watched, or
-watched but without a confirmed score. `/backlog`, a `backlog` block: a simple searchable,
-filterable checklist, two statuses (**to watch**, **needs rewatch** — the latter shows the
-previous, unconfirmed score for reference). Authored directly on the page as rows (title, status,
-optional previous score) — no per-movie detail pages, since these don't have a confirmed score or
-review yet. No TMDB posters in v1, kept simple/fast.
-
-Dropped a third status that existed briefly ("needs ranking," for a set of favorites without a
-proper per-category breakdown yet) — simplification, not a data-modeling dead end; that set can
-come back once there's an actual place for it (e.g. once Duels' brackets exist).
-
-**Not built yet:** collections (genre/director/custom-ranked lists), and feeding into the Calendar
-display. Vlad's also considering reworking this to look more like the Library grid (posters,
-TMDB-enriched) rather than the current plain list — undecided, noted here rather than acted on.
-
----
-
-## Future work — needs a backend
-
-Deliberately not built on EDS as-is. Each of these wants either persisted state that changes
-often, or logic that needs to run without a page visit triggering it — both mean a real
-backend (e.g. a small serverless function), which is a bigger, separate task from anything else
-in this repo.
-
-- **Duel results that actually adjust library scores** (the original Elo-style idea) — needs
-  somewhere to durably store the adjustment, updated on every comparison
-- **Real "leaving soon" alerts** — proactive, checked periodically even when nobody's visiting
-  (needs a cron/serverless job, not just a client-side fetch)
-- **Editing from the live site itself** — both "add a new movie" and "edit an existing movie's
-  score/review" from a button on the public pages are the same underlying need: a write to DA
-  triggered from a visitor's browser, which needs a serverless function to hold credentials
-  safely, not just client-side JS. One backend task covers both, not two. In the meantime,
-  `movie.js` has an owner-only "Edit in DA" link (`localStorage` gated) that's a real convenience
-  but not a save-in-place feature — it just deep-links to da.live's own editor for that page
-- **Personal per-category weights that persist and sync across your devices** — the visitor-facing
-  version (Feature 1) is backend-free; this specific version (yours, saved, everywhere) isn't
-- **A genuinely interactive, editable Calendar** — drag-to-reschedule, live editing — vs. the
-  static authored display version that's in scope now
-- **Accounts** — still deliberately out of scope entirely; the site has exactly one writer (you)
-
----
-
-## Technical notes (not final decisions, just groundwork)
-
-- **Data source:** TMDB API (free) for poster/art, cast/crew, metadata, and its
-  `/movie/{id}/watch/providers` endpoint for region-specific streaming availability — covers most
-  of Feature 1's metadata needs without building a data pipeline from scratch.
-- **Flow diversity for Nightshift's M1 needs:** this concept naturally gives 3+ structurally
-  different flows to later plant defects/breakage into — browsing/rating (Library), a comparison
-  interaction (Duels), and a scheduling/planning flow (Calendar) — good variety of interaction
-  shapes, plus real external API integration (a more realistic "modern site" surface than static
-  content).
-- **Why the reframe helps Nightshift too:** a public, single-writer/many-reader site is a more
-  realistic "modern site" shape to plant defects/breakage into than a private tool would be —
-  most real sites work this way.
-
----
-
-## Open questions
-
-- [x] Final name for the Versus/comparison feature — **Duels**
-- [ ] Final name for the Backlog/not-watched section ("Progression" vs. "Backlog" vs. other)
-- [x] Whether "vibe" tags are freeform text or a fixed curated set — fixed list, see Feature 1
-- [ ] Which 2-3 of these flows are the actual MVP for M1 vs. built out later
-- [ ] Whether/when to invest in any of the "Future work" backend items, vs. leaving them deferred
-      indefinitely
+- Duel/Bracket results that actually adjust a movie's real library score
+- Proactive "leaving streaming soon" alerts (checked on a schedule, not just on visit)
+- Adding or editing a movie directly from the public site (today: an owner-only "Edit in DA"
+  link that deep-links to the real editor instead)
+- Personal rating weights that persist and sync across devices
+- A truly interactive, drag-to-reschedule Calendar
 
 ---
 
@@ -257,42 +96,33 @@ npm run lint
 1. Add the [AEM Code Sync GitHub App](https://github.com/apps/aem-code-sync) to the repository
 2. Install the [AEM CLI](https://github.com/adobe/helix-cli): `npm install -g @adobe/aem-cli`
 3. Start AEM Proxy: `aem up --html-folder drafts --html-mount /` (opens your browser at
-   `http://localhost:3000`) — see the roadmap note above on why `--html-mount /` is needed
+   `http://localhost:3000` — `--html-mount /` is needed so draft content resolves at real paths
+   like `/`, `/library`, `/movies/...` instead of under `/drafts/...`)
 4. Open the `cinerank` directory in your favorite IDE and start coding :)
 
 ### Adding a new movie
 
-Content (pages) and code (blocks/JS/CSS) are two separate systems here — adding a movie is a
-**content** change, done in Document Authoring (DA) at `https://da.live/#/costaalacuparmare/cinerank`,
-not a code change. Works from any device with a browser, including a phone — no laptop required.
-**One authoring step** — the grid is query-index-driven, so there's no second row to duplicate
-into a home-page listing anymore.
+Adding a movie is a **content** change in Document Authoring
+(`https://da.live/#/costaalacuparmare/cinerank`), not a code change — works from any device with a
+browser, no laptop required.
 
 1. In da.live, create a new document under `movies/` (e.g. `movies/your-movie-slug`)
-2. Author the `movie` block with 2-3 rows:
-   - Row 1: the movie's title and year, e.g. `Poor Things (2023)` — this doubles as the TMDB
-     search query, so keep it close to the real title
+2. Author the `movie` block with 2–3 rows:
+   - Row 1: title and year, e.g. `Poor Things (2023)` — also used as the TMDB search query
    - Row 2: your 4 scores, labeled — `**Plot:** 9 **Filmography:** 8 **Sound:** 7 **Vibe:** 10`
-     (0-10, or 11 for a rare exceptional score)
    - Row 3 *(optional)*: your personal review, free text
-3. Author the `metadata` block (bottom of the page, same doc): `title`, `director`, `year`, the 4
-   `*-score` fields matching row 2, and `tags` (any of the fixed genre/vibe list — this is what
-   the query-index and the grid's filters actually read from, not the visible `movie` block)
-4. Preview it (DA's own "Preview" action, or ask an agent to hit the Admin API), check it renders
-   right, then publish
+3. Author the `metadata` block (bottom of the page): `title`, `director`, `year`, the 4
+   `*-score` fields, and `tags` (any of the fixed genre/vibe list — this is what the Library's
+   filters actually read from)
+4. Preview, check it renders right, then publish
 
-Poster, director, cast, and summary all auto-fill on the live site from TMDB — you only ever type
-the title/year, your scores, your review, and the metadata block. It'll appear in the grid
-automatically on next publish, no separate step.
+Poster, director, cast, and summary all auto-fill from TMDB — you only type the title/year,
+scores, review, and metadata. It appears in the grid automatically on next publish.
 
 If you're logged into da.live in the same browser, each movie's detail page also has an
-**"Edit in DA"** link (top-right, only visible in "owner mode") that jumps straight to that page's
-editor — a convenience link, not a write feature; it needs no credentials of its own.
+**"Edit in DA"** link (top-right, "owner mode" only) that jumps straight to that page's editor —
+a convenience link, not a write feature; it needs no credentials of its own.
 
 **Turning on owner mode:** visit any page once with `?owner=true` in the URL (e.g.
-`https://main--cinerank--costaalacuparmare.aem.live/calendar?owner=true`) — it's saved to
-`localStorage` in that browser from then on, no devtools needed. (The old way,
-`localStorage.setItem('cinerank-owner', 'true')` in devtools, still works too.) Calendar's "mark
-watched/missed" chip-cycling (see Feature 3) is *not* gated this way — it's harmless to expose to
-everyone since it's a this-device-only localStorage toggle that never touches the real content, so
-anyone can click through it on their own screen without affecting what anyone else sees.
+`https://main--cinerank--costaalacuparmare.aem.live/calendar?owner=true`) — it's saved in that
+browser from then on.
