@@ -25,10 +25,12 @@ header nav {
 header nav[aria-expanded='true'] {
   grid-template:
     'hamburger brand' var(--nav-height)
-    'sections sections' 1fr
+    'sections sections' auto
     'tools tools' var(--nav-height) / auto 1fr;
-  overflow-y: auto;
-  min-height: 100dvh;
+  height: auto;
+  overflow-y: visible;
+  min-height: 0;
+  max-height: 100dvh;
 }
 
 @media (width >= 900px) {

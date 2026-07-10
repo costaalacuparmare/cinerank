@@ -7,6 +7,56 @@ const MONTH_NAMES = [
 const NEXT_STATUS = { planned: 'watched', watched: 'missed', missed: 'planned' };
 
 /**
+ * @param {number} n a number to zero-pad
+ * @returns {string} n as a 2-digit string
+ */
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+/**
+ * @param {Date} date a local date/time
+ * @returns {string} that date/time formatted for an iCalendar DTSTART/DTEND/DTSTAMP value
+ */
+function toIcsDate(date) {
+  return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}T${pad2(date.getHours())}${pad2(date.getMinutes())}00`;
+}
+
+/**
+ * @param {string} text free text to embed in an iCalendar field
+ * @returns {string} text with RFC 5545's required characters escaped
+ */
+function escapeIcsText(text) {
+  return text.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+}
+
+/**
+ * Builds a standalone .ics snapshot of the current plan — a one-time export, not a live-syncing
+ * subscription (that would need a backend to keep regenerating it). Each entry becomes a 2-hour
+ * placeholder event (movie runtimes aren't authored data here).
+ * @param {Object[]} entries parsed calendar entries
+ * @returns {string} the file contents
+ */
+function buildIcs(entries) {
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Cinerank//Calendar//EN'];
+  entries.forEach((entry, i) => {
+    const end = new Date(entry.date.getTime() + (2 * 60 * 60 * 1000));
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:cinerank-${i}-${entry.date.getTime()}@cinerank`,
+      `DTSTAMP:${toIcsDate(new Date())}Z`,
+      `DTSTART:${toIcsDate(entry.date)}`,
+      `DTEND:${toIcsDate(end)}`,
+      `SUMMARY:${escapeIcsText(entry.title)}`,
+    );
+    if (entry.where) lines.push(`LOCATION:${escapeIcsText(entry.where)}`);
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+/**
  * @param {string} title entry title
  * @param {Date} date entry date
  * @returns {string} a stable localStorage key for this entry's owner-marked status
@@ -58,13 +108,12 @@ function setStatus(entry, status) {
 
 /**
  * @param {Object} entry parsed calendar entry
- * @param {boolean} ownerMode whether to make the chip clickable to cycle its status
  * @param {() => void} onChange called after the entry's status changes, to re-render
  * @returns {Element}
  */
-function buildEntryChip(entry, ownerMode, onChange) {
-  const chip = document.createElement(ownerMode ? 'button' : 'div');
-  if (ownerMode) chip.type = 'button';
+function buildEntryChip(entry, onChange) {
+  const chip = document.createElement('button');
+  chip.type = 'button';
   chip.className = `calendar-chip calendar-chip-${entry.status}`;
 
   const label = document.createElement('span');
@@ -77,12 +126,10 @@ function buildEntryChip(entry, ownerMode, onChange) {
     : '';
   chip.title = [timeLabel, entry.where].filter(Boolean).join(' · ') || entry.title;
 
-  if (ownerMode) {
-    chip.addEventListener('click', () => {
-      setStatus(entry, NEXT_STATUS[entry.status]);
-      onChange();
-    });
-  }
+  chip.addEventListener('click', () => {
+    setStatus(entry, NEXT_STATUS[entry.status]);
+    onChange();
+  });
 
   return chip;
 }
@@ -91,11 +138,10 @@ function buildEntryChip(entry, ownerMode, onChange) {
  * @param {number} year full year
  * @param {number} month 0-indexed month
  * @param {Map<string, Object[]>} entriesByDay entries grouped by dayKey
- * @param {boolean} ownerMode whether chips are clickable
  * @param {() => void} onChange called after a chip's status changes, to re-render
  * @returns {Element}
  */
-function buildMonthGrid(year, month, entriesByDay, ownerMode, onChange) {
+function buildMonthGrid(year, month, entriesByDay, onChange) {
   const grid = document.createElement('div');
   grid.className = 'calendar-month-grid';
 
@@ -132,7 +178,7 @@ function buildMonthGrid(year, month, entriesByDay, ownerMode, onChange) {
       cell.append(dayLabel);
 
       const dayEntries = entriesByDay.get(dayKey(cellDate)) || [];
-      dayEntries.forEach((entry) => cell.append(buildEntryChip(entry, ownerMode, onChange)));
+      dayEntries.forEach((entry) => cell.append(buildEntryChip(entry, onChange)));
     }
 
     grid.append(cell);
@@ -145,10 +191,10 @@ function buildMonthGrid(year, month, entriesByDay, ownerMode, onChange) {
  * decorate the calendar block — a public month-grid display of what you're planning to watch,
  * when, and where (a streaming platform, another online source, or a physical venue). Not an
  * interactive scheduler for visitors: authored directly on this page as rows, same pattern as
- * Backlog. For the owner only (the same `cinerank-owner` localStorage flag "Edit in DA" uses),
- * clicking an entry cycles it through planned -> watched -> missed -> planned. This can't write
- * back to the authored content (no backend), so it's a personal, this-device-only status saved
- * to localStorage, not something visitors or other devices see.
+ * Backlog. Clicking an entry cycles it through planned -> watched -> missed -> planned. This
+ * can't write back to the authored content (no backend), so it's a this-device-only status
+ * saved to localStorage, not something other visitors or devices see — anyone can play with it
+ * on their own screen without affecting the real plan.
  * @param {Element} block the block
  */
 export default function decorate(block) {
@@ -162,7 +208,6 @@ export default function decorate(block) {
     return;
   }
 
-  const ownerMode = localStorage.getItem('cinerank-owner') === 'true';
   const entriesByDay = new Map();
   entries.forEach((entry) => {
     const key = dayKey(entry.date);
@@ -210,7 +255,7 @@ export default function decorate(block) {
     });
 
     monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
-    const grid = buildMonthGrid(viewYear, viewMonth, entriesByDay, ownerMode, render);
+    const grid = buildMonthGrid(viewYear, viewMonth, entriesByDay, render);
     if (query) {
       grid.querySelectorAll('.calendar-chip').forEach((chip) => {
         const title = chip.querySelector('.calendar-chip-title')?.textContent.toLowerCase() || '';
@@ -249,9 +294,25 @@ export default function decorate(block) {
     render();
   });
 
+  const exportButton = document.createElement('button');
+  exportButton.type = 'button';
+  exportButton.className = 'calendar-export-button';
+  exportButton.textContent = 'Export .ics';
+  exportButton.title = 'Download the current plan as a calendar file (a one-time snapshot, not a live subscription)';
+  exportButton.addEventListener('click', () => {
+    const ics = buildIcs(entries);
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'cinerank-calendar.ics';
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
   const monthNav = document.createElement('div');
   monthNav.className = 'calendar-nav-month';
-  monthNav.append(prevButton, monthLabel, nextButton, todayButton);
+  monthNav.append(prevButton, monthLabel, nextButton, todayButton, exportButton);
 
   const nav = document.createElement('div');
   nav.className = 'calendar-nav';

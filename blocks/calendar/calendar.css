@@ -58,6 +58,22 @@ main .calendar-today-button:hover {
   border-color: var(--accent-gold);
 }
 
+main .calendar-export-button {
+  border: 1px solid var(--dark-color);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background-color: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: var(--body-font-size-xs);
+  cursor: pointer;
+}
+
+main .calendar-export-button:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
 main .calendar-search {
   flex: 0 1 160px;
   max-width: 160px;
@@ -127,29 +143,30 @@ main .calendar-day-cell-today .calendar-day-number {
 }
 
 main .calendar-chip {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   width: 100%;
-  border: 1px solid var(--dark-color);
+  border: 1px dashed var(--dark-color);
   border-radius: 3px;
   padding: 2px 5px;
   background-color: transparent;
   color: var(--text-color);
   font: inherit;
   text-align: left;
-  cursor: default;
+  cursor: pointer;
   box-sizing: border-box;
 }
 
-main button.calendar-chip {
-  cursor: pointer;
-}
-
-main button.calendar-chip:hover {
+main .calendar-chip:hover {
   border-color: var(--accent-gold);
+  border-style: solid;
 }
 
 main .calendar-chip-title {
   display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: var(--body-font-family);
   font-size: var(--body-font-size-xs);
   overflow: hidden;
