@@ -14,7 +14,7 @@ main .duel .duel-mode-toggle {
   overflow: hidden;
 }
 
-main .duel .duel-mode-button {
+main .duel .duel-toggle-btn {
   border: 0;
   padding: 8px 16px;
   background-color: var(--light-color);
@@ -24,7 +24,7 @@ main .duel .duel-mode-button {
   cursor: pointer;
 }
 
-main .duel .duel-mode-button[aria-pressed='true'] {
+main .duel .duel-toggle-btn[aria-pressed='true'] {
   background-color: var(--accent-gold);
   color: #121012;
 }

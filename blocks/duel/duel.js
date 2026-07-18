@@ -318,17 +318,17 @@ export default async function decorate(block) {
 
   const randomButton = document.createElement('button');
   randomButton.type = 'button';
-  randomButton.className = 'duel-mode-button';
+  randomButton.className = 'duel-toggle-btn';
   randomButton.textContent = 'Random';
 
   const customButton = document.createElement('button');
   customButton.type = 'button';
-  customButton.className = 'duel-mode-button';
+  customButton.className = 'duel-toggle-btn';
   customButton.textContent = 'Custom';
 
   const bracketButton = document.createElement('button');
   bracketButton.type = 'button';
-  bracketButton.className = 'duel-mode-button';
+  bracketButton.className = 'duel-toggle-btn';
   bracketButton.textContent = 'Bracket';
   if (entries.length < BRACKET_SIZE) {
     bracketButton.disabled = true;
@@ -502,13 +502,11 @@ export default async function decorate(block) {
   minusButton.type = 'button';
   minusButton.className = 'duel-count-button';
   minusButton.textContent = '−';
-  minusButton.setAttribute('aria-label', 'Remove a movie from the duel');
 
   const addButton = document.createElement('button');
   addButton.type = 'button';
   addButton.className = 'duel-count-button';
   addButton.textContent = '+';
-  addButton.setAttribute('aria-label', 'Add another movie to the duel');
 
   function setCount(nextCount) {
     count = Math.max(MIN_COUNT, Math.min(MAX_COUNT, nextCount));
